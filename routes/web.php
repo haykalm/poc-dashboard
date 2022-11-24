@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\{
 	DashboardController,
+	PeopleController,
 };
 
 /*
@@ -30,4 +31,6 @@ Auth::routes();
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::resource('/dashboard', DashboardController::class);
+
+Route::resource('/people', PeopleController::class);
 
