@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\PeopleTapMenu;
+use App\Models\User;
+use App\Models\Karyawan;
+use Carbon\Carbon;
 
 
 class PeopleController extends Controller
@@ -13,18 +16,67 @@ class PeopleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        // $data = PeopleTapMenu::offset(10)
-        //     ->limit(1)
-        //     ->orderBy('updated_at', 'DESC')
-        //     ->get();
-        // $data = PeopleTapMenu::limit(20)->get();
-        $data = PeopleTapMenu::get();
+        $perpage=10;
+        if (empty($request->page)) {
+            $requestpage = 1;
+        } else {
+            $requestpage = $request->page;
+        }
 
-            
-        // return $data;
-        return view('people.list', ['data' => $data]);
+        if ($requestpage == 1) {
+            $page = 1;
+            $limit_page = 0;
+        } else {
+            $limit_page = ($request->page * $perpage) - $perpage;
+        }
+        
+        $data = PeopleTapMenu::select('people_tap_menu.*','karyawan.nama','karyawan.email','karyawan.departemen')
+        ->join('karyawan','karyawan.nik','=','people_tap_menu.nik')
+        ->offset($limit_page)
+        ->limit($perpage)
+        ->orderBy('created_at', 'DESC')
+        ->get();
+
+        $count = count(PeopleTapMenu::get());
+        if ($count / $requestpage <= ($perpage)) {
+
+            $islastpage = true;
+        } else {
+            $islastpage = false;
+        }
+
+        $lastPage = ceil($count / $perpage);
+
+
+        if (count($data) != 0) {
+
+            $response = [
+                "status" => true,
+                "message" => "page berhasil ditampilkan",
+                "data" => $data,
+                "totaldata" => $count,
+                "page" => $requestpage,
+                "last_page" => $lastPage,
+                "is_last_page" => $islastpage
+            ];
+            $http_code = 200;
+        } else {
+            $response = [
+                "status" => false,
+                "message" => "Tidak Ada data page",
+                "totaldata" => $count,
+                "page" => $requestpage,
+                "last_page" => $lastPage,
+                "is_last_page" => $islastpage
+            ];
+            $http_code = 200;
+        }
+
+        return view('people.list', ['data' => $data, 'response' => $response]);
+
+            // return response($response, $http_code);
 
     }
 
@@ -46,7 +98,87 @@ class PeopleController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // return $request->all();
+        $datenow=Carbon::now()->format('Y-m-d H:i:s');
+        $dateparam=Carbon::now()->format('Y-m-d');
+
+
+        $data = PeopleTapMenu::where('nik',$request->nik)->whereDate('created_at',$dateparam)->first();
+        if (empty($data)) {
+           $save = new PeopleTapMenu();
+           $save->nik = $request->nik;
+           $save->absen_a_time_in = $datenow;
+           $save->status_tap_in = 1;
+           $save = $save->save();
+
+        } else {
+
+            if ($data->absen_a_time_out==NULL || $data->absen_a_time_out==null) {
+
+               $data->nik = $request->nik;
+               $data->absen_a_time_out = $datenow;
+               $data->status_tap_out = 1;
+               $save = $data->save();
+
+            } elseif ($data->absen_b_time_in==NULL || $data->absen_b_time_in==null) {
+               $data->absen_b_time_in = $datenow;
+               $data->status_tap_in = 2;
+               $save = $data->save();
+
+            } elseif ($data->absen_b_time_out==NULL || $data->absen_b_time_out==null) {
+
+               $data->absen_b_time_out = $datenow;
+               $data->status_tap_out = 2;
+               $save = $data->save();
+
+            }elseif ($data->absen_c_time_in==NULL || $data->absen_c_time_in==null) {
+
+              $data->absen_c_time_in = $datenow;
+              $data->status_tap_in = 3;
+              $save = $data->save();
+
+            }elseif ($data->absen_c_time_out==NULL || $data->absen_c_time_out==null) {
+
+               $data->absen_c_time_out = $datenow;
+               $data->status_tap_out = 3;
+               $save = $data->save();
+
+            } else {
+                $response = [
+                    'status'=> false,
+                    'message'=> 'Failed to taping'
+                ];
+                $http_code = 422;
+                return response($response, $http_code);
+
+            }
+
+            $response = [
+                'status'=> false,
+                'message'=> 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
+
+        }
+        
+        if($save){
+            $response = [
+             'status'=> true,
+             'message'=> 'Tapping success',
+             'data' => $save,
+             ];
+            $http_code = 200;
+
+        }else{
+             $response = [
+                'status'=> false,
+                'message'=> 'Failed to tap'
+            ];
+            $http_code = 422;
+     
+        }
+        return response($response, $http_code);
     }
 
     /**

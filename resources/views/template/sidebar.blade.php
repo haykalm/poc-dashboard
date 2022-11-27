@@ -22,7 +22,7 @@
             <hr class="sidebar-divider my-0">
 
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{url('/people')}}">
                     <i class="fas fa-fw fa-users"></i>
                     <span>All Absent</span>
                 </a>
@@ -40,8 +40,8 @@
                 </a>
                 <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{url('/dashboard')}}">sub 1</a>
-                        <a class="collapse-item" href="{{url('/dashboard')}}">sub 2</a>
+                        <a class="collapse-item" href="{{url('/dashboard')}}">Absent_In</a>
+                        <a class="collapse-item" href="{{url('/dashboard')}}">Absent_Out</a>
                     </div>
                 </div>
             </li>

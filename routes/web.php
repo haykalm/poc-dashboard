@@ -32,5 +32,8 @@ Auth::routes();
 
 Route::resource('/dashboard', DashboardController::class);
 
-Route::resource('/people', PeopleController::class);
+Route::get('/people', [PeopleController::class, 'index']);
+
+
+// Route::resource('/people', PeopleController::class);
 
