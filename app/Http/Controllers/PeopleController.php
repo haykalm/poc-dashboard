@@ -59,36 +59,44 @@ class PeopleController extends Controller
                 'c_duration'=> Carbon::parse($value->absen_c_time_in)->diff(Carbon::parse($value->absen_c_time_out))->format('%H:%I:%S'),
             ];
         } 
-      //   $sum_minutes = 0;
-      //   foreach($datalist as $time => $value) {
-      //     $explodedTime = array_map('a_duration', explode(':', $value['a_duration'] ));
-      //     $sum_minutes += $explodedTime[0]*60+$explodedTime[1];
-      // }
-      // $sumTime = floor($sum_minutes/60).':'.floor($sum_minutes % 60);
-      // return $sumTime;
 
-        // foreach ($datalist as $key => $value) {
-        //     $tot_dur_a = $value['a_duration'];
-        //     $tot_dur_b = $value['b_duration'];
-        //     $tot_dur_c = $value['c_duration'];
-        // }
+      
 
-        // if (is_numeric($tot_dur_a) && is_numeric($tot_dur_b) && is_numeric($tot_dur_c)) {
-        //     if ($tot_dur_a == null) {
-        //         $total_dur = ($tot_dur_b + $tot_dur_c);
+        foreach ($datalist as $key => $value) {
+            $tot_dur_a = $value['a_duration'];
+            $tot_dur_b = $value['b_duration'];
+            $tot_dur_c = $value['c_duration'];
+        }
+          $sum_minutes = 0;
+        foreach($datalist as $time => $value) {
+          $explodedTime = array_map('a_duration', explode(':', $value['a_duration'] ));
+          $sum_minutes += $explodedTime[0]*60+$explodedTime[1];
+      }
+      $sumTime = floor($sum_minutes/60).':'.floor($sum_minutes % 60);
+      return $sumTime;
 
-        //     }elseif ($tot_dur_b == null) {
-        //         $total_dur = ($tot_dur_a + $tot_dur_c);
+        // $tam = date_diff($tot_dur_a,$tot_dur_b,$tot_dur_c);
+        // $tam = ($tot_dur_a+$tot_dur_b+$tot_dur_c);
+        // return $tam;
 
-        //     }elseif ($tot_dur_c == null) {
-        //         $total_dur = ($tot_dur_a + $tot_dur_b);
+        if (is_numeric($tot_dur_a) && is_numeric($tot_dur_b) && is_numeric($tot_dur_c)) {
+            $total_dur = ($tot_dur_a + $tot_dur_b + $tot_dur_c);
 
-        //     }else {
-        //         $total_dur = ($tot_dur_a + $tot_dur_b + $tot_dur_c);
-        //     }
-        // }else{
-        //     $total_dur = ($tot_dur_a + $tot_dur_b + $tot_dur_c);
-        // }
+        }else{
+            if ($tot_dur_a == null) {
+                $total_dur = ($tot_dur_b + $tot_dur_c);
+
+            }elseif ($tot_dur_b == null) {
+                $total_dur = ($tot_dur_a + $tot_dur_c);
+
+            }elseif ($tot_dur_c == null) {
+                $total_dur = ($tot_dur_a + $tot_dur_b);
+
+            }else {
+                // $total_dur = ($tot_dur_a + $tot_dur_b + $tot_dur_c);
+                $total_dur = (is_numeric($tot_dur_a) + is_numeric($tot_dur_b) + is_numeric($tot_dur_c));
+            }
+        }
         // return $total_dur;
 
         $count = count(PeopleTapMenu::get());
