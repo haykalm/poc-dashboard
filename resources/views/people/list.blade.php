@@ -116,7 +116,9 @@ list people absen
                         @endif()
                     </sup></td>
                     <td width="5%"><sup>
-                        total duration
+                        <!-- total duration -->
+                        {{ $value['total_duration'] }}
+                        
                     </sup></td>
                     <td width="5%"><sup>
                         {{ date("d/m/Y",strtotime($value['created_at'])) }}
