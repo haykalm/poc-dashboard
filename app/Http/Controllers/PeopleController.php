@@ -101,7 +101,7 @@ class PeopleController extends Controller
                 'total_duration'=>Carbon::parse($totaldurations)->format('H:i:s')
             ];
         }
-        
+
         $count = count(PeopleTapMenu::get());
         if ($count / $requestpage <= ($perpage)) {
 
@@ -381,6 +381,14 @@ class PeopleController extends Controller
 
     public function submitform()
     {
-        return view('submitform');
+        $get=Karyawan::all();
+        return view('submitform',['get' => $get]);
+    }
+
+    public function getkaryawan()
+    {
+        $get=Karyawan::all();
+        return view('submitform',['get' => $get]);
+        
     }
 }
