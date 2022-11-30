@@ -61,15 +61,27 @@ class PeopleController extends Controller
             $c_explode=explode(':',$c_duration);
             $totalhour=$a_explode[0]+$b_explode[0]+$c_explode[0];
             $totalminutes=$a_explode[1]+$b_explode[1]+$c_explode[1];
+            $totalsecond=$a_explode[2]+$b_explode[2]+$c_explode[2];
             $minutes=$totalminutes;
+            $second=$totalsecond;
+
             if ($totalminutes==60) {
                 $hour=$totalhour+1;
                 $minutes=0;
+            }elseif($totalminutes<60 && $totalsecond>=60 ){
+                $hour=$totalhour;
+                $minutes=$totalminutes+1;
+                $second=0;
+            }elseif($totalminutes<60 && $totalsecond<60 ){
+                $hour=$totalhour;
+                $minutes=$totalminutes;
+                $second=$totalsecond+0;
             }else{
                 $hour=$totalhour;
                 $minutes=$totalminutes;
+                $second=$totalsecond;
             }
-            $totaldurations=$hour.':'.$minutes;
+            $totaldurations=$hour.':'.$minutes.':'.$second;
             
             $datalist[] = [
                 'nik' => $value->nik,
@@ -122,7 +134,7 @@ class PeopleController extends Controller
                 "last_page" => $lastPage,
                 "is_last_page" => $islastpage
             ];
-            $http_code = 200;
+            $http_code = 422;
         }
 
         return view('people.list', ['data' => $data, 'response' => $response, 'datalist' => $datalist]);
