@@ -65,6 +65,7 @@ dashboard
                         @csrf
                         <table>
                             <tr>
+                                
                                 <td>
                                     <label for="" style="color:transparent">Standard Select</label>
                                     <select name="nik" required>
