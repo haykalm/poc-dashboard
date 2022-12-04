@@ -18,7 +18,7 @@ class PeopleController extends Controller
     
     public function index(Request $request)
     {
-        $perpage=10;
+        $perpage = 10;
         if (empty($request->page)) {
             $requestpage = 1;
         } else {
@@ -31,32 +31,73 @@ class PeopleController extends Controller
         } else {
             $limit_page = ($request->page * $perpage) - $perpage;
         }
-        
-        $data = PeopleTapMenu::select('people_tap_menu.*','karyawan.nama','karyawan.email','karyawan.departemen')
-        ->join('karyawan','karyawan.nik','=','people_tap_menu.nik')
-        ->offset($limit_page)
-        ->limit($perpage)
-        ->orderBy('created_at', 'DESC')
-        ->get();
-        $datalist=[];
-        foreach ($data as $key => $value) {
-            $datalist[]=[
-                'nik'=>$value->nik,
-                'nama'=>$value->nama,
-                'absen_a_time_in'=>$value->absen_a_time_in,
-                'absen_a_time_out'=>$value->absen_a_time_out,
-                'a_duration'=>$value->a_duration,
-                'absen_b_time_in'=>$value->absen_b_time_in,
-                'absen_b_time_out'=>$value->absen_b_time_out,
-                'absen_c_time_in'=>$value->absen_c_time_in,
-                'absen_c_time_out'=>$value->absen_c_time_out,
-                'status_tap_in'=>$value->status_tap_in,
-                'status_tap_out'=>$value->status_tap_out,
-                'created_at'=>$value->created_at,
 
-                'a_duration'=> Carbon::parse($value->absen_a_time_in)->diff(Carbon::parse($value->absen_a_time_out))->format('%H:%I:%S'),
-                'b_duration'=> Carbon::parse($value->absen_b_time_in)->diff(Carbon::parse($value->absen_b_time_out))->format('%H:%I:%S'),
-                'c_duration'=> Carbon::parse($value->absen_c_time_in)->diff(Carbon::parse($value->absen_c_time_out))->format('%H:%I:%S'),
+        $data = PeopleTapMenu::select('people_tap_menu.*', 'karyawan.nama', 'karyawan.email', 'karyawan.departemen')
+            ->join('karyawan', 'karyawan.nik', '=', 'people_tap_menu.nik')
+            ->offset($limit_page)
+            ->limit($perpage)
+            ->orderBy('created_at', 'DESC')
+            ->get();
+        $datalist = [];
+        foreach ($data as $key => $value) {
+            if ($value->absen_a_time_out != null) {
+                $a_duration = Carbon::parse($value->absen_a_time_in)->diff(Carbon::parse($value->absen_a_time_out))->format('%H:%I:%S');
+            } else {
+                $a_duration = '00:00:00';
+            }
+            if ($value->absen_b_time_out != null) {
+                $b_duration = Carbon::parse($value->absen_b_time_in)->diff(Carbon::parse($value->absen_b_time_out))->format('%H:%I:%S');
+            } else {
+                $b_duration = '00:00:00';
+            }
+            if ($value->absen_c_time_out != null) {
+                $c_duration = Carbon::parse($value->absen_c_time_in)->diff(Carbon::parse($value->absen_c_time_out))->format('%H:%I:%S');
+            } else {
+                $c_duration = '00:00:00';
+            }
+            $a_explode=explode(':',$a_duration);
+            $b_explode=explode(':',$b_duration);
+            $c_explode=explode(':',$c_duration);
+            $totalhour=$a_explode[0]+$b_explode[0]+$c_explode[0];
+            $totalminutes=$a_explode[1]+$b_explode[1]+$c_explode[1];
+            $totalsecond=$a_explode[2]+$b_explode[2]+$c_explode[2];
+            $minutes=$totalminutes;
+            $second=$totalsecond;
+
+            if ($totalminutes==60) {
+                $hour=$totalhour+1;
+                $minutes=0;
+            }elseif($totalminutes<60 && $totalsecond>=60 ){
+                $hour=$totalhour;
+                $minutes=$totalminutes+1;
+                $second=0;
+            }elseif($totalminutes<60 && $totalsecond<60 ){
+                $hour=$totalhour;
+                $minutes=$totalminutes;
+                $second=$totalsecond+0;
+            }else{
+                $hour=$totalhour;
+                $minutes=$totalminutes;
+                $second=$totalsecond;
+            }
+            $totaldurations=$hour.':'.$minutes.':'.$second;
+            
+            $datalist[] = [
+                'nik' => $value->nik,
+                'nama' => $value->nama,
+                'absen_a_time_in' => $value->absen_a_time_in,
+                'absen_a_time_out' => $value->absen_a_time_out,
+                'absen_b_time_in' => $value->absen_b_time_in,
+                'absen_b_time_out' => $value->absen_b_time_out,
+                'absen_c_time_in' => $value->absen_c_time_in,
+                'absen_c_time_out' => $value->absen_c_time_out,
+                'status_tap_in' => $value->status_tap_in,
+                'status_tap_out' => $value->status_tap_out,
+                'created_at' => $value->created_at,
+                'a_duration' => $a_duration,
+                'b_duration' => $b_duration,
+                'c_duration' => $c_duration,
+                'total_duration'=>Carbon::parse($totaldurations)->format('H:i:s')
             ];
         } 
      
@@ -93,14 +134,10 @@ class PeopleController extends Controller
                 "last_page" => $lastPage,
                 "is_last_page" => $islastpage
             ];
-            $http_code = 200;
+            $http_code = 422;
         }
 
-        // return $response;
-
-        return view('people.list', ['data' => $data, 'response' => $response, 'datalist'=> $datalist]);
-
-            // return response($response, $http_code);
+        return view('people.list', ['data' => $data, 'response' => $response, 'datalist' => $datalist]);
 
     }
 
@@ -226,7 +263,6 @@ class PeopleController extends Controller
                 'data' => $save,
             ];
             $http_code = 200;
-
         } else {
             $response = [
                 'status' => false,
@@ -338,7 +374,6 @@ class PeopleController extends Controller
                 'data' => $save,
             ];
             $http_code = 200;
-
         } else {
             $response = [
                 'status' => false,
@@ -349,7 +384,6 @@ class PeopleController extends Controller
 
         if (!empty($request->post)) {
             return redirect()->back()->with('success', 'your message,here');
-
         } else {
             return response($response, $http_code);
         }
@@ -449,7 +483,6 @@ class PeopleController extends Controller
                 'data' => $save,
             ];
             $http_code = 200;
-
         } else {
             $response = [
                 'status' => false,
@@ -474,5 +507,18 @@ class PeopleController extends Controller
 
     public function destroy($id)
     {
+    }
+
+    public function submitform()
+    {
+        $get=Karyawan::all();
+        return view('submitform',['get' => $get]);
+    }
+
+    public function getkaryawan()
+    {
+        $get=Karyawan::all();
+        return view('submitform',['get' => $get]);
+        
     }
 }
