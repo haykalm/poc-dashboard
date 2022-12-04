@@ -3,19 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\PeopleTapMenu;
-use App\Models\User;
-use App\Models\Karyawan;
+use App\Models\{
+    User,
+    Karyawan,
+    DetailTap,
+    PeopleTapMenu,
+};
 use Carbon\Carbon;
+use Session;
 
 
 class PeopleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    
     public function index(Request $request)
     {
         $perpage=10;
@@ -59,37 +59,7 @@ class PeopleController extends Controller
                 'c_duration'=> Carbon::parse($value->absen_c_time_in)->diff(Carbon::parse($value->absen_c_time_out))->format('%H:%I:%S'),
             ];
         } 
-      //   $sum_minutes = 0;
-      //   foreach($datalist as $time => $value) {
-      //     $explodedTime = array_map('a_duration', explode(':', $value['a_duration'] ));
-      //     $sum_minutes += $explodedTime[0]*60+$explodedTime[1];
-      // }
-      // $sumTime = floor($sum_minutes/60).':'.floor($sum_minutes % 60);
-      // return $sumTime;
-
-        // foreach ($datalist as $key => $value) {
-        //     $tot_dur_a = $value['a_duration'];
-        //     $tot_dur_b = $value['b_duration'];
-        //     $tot_dur_c = $value['c_duration'];
-        // }
-
-        // if (is_numeric($tot_dur_a) && is_numeric($tot_dur_b) && is_numeric($tot_dur_c)) {
-        //     if ($tot_dur_a == null) {
-        //         $total_dur = ($tot_dur_b + $tot_dur_c);
-
-        //     }elseif ($tot_dur_b == null) {
-        //         $total_dur = ($tot_dur_a + $tot_dur_c);
-
-        //     }elseif ($tot_dur_c == null) {
-        //         $total_dur = ($tot_dur_a + $tot_dur_b);
-
-        //     }else {
-        //         $total_dur = ($tot_dur_a + $tot_dur_b + $tot_dur_c);
-        //     }
-        // }else{
-        //     $total_dur = ($tot_dur_a + $tot_dur_b + $tot_dur_c);
-        // }
-        // return $total_dur;
+     
 
         $count = count(PeopleTapMenu::get());
         if ($count / $requestpage <= ($perpage)) {
@@ -134,244 +104,375 @@ class PeopleController extends Controller
 
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create()
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-         // return $request->all();
-        $datenow=Carbon::now()->format('Y-m-d H:i:s');
-        $dateparam=Carbon::now()->format('Y-m-d');
-
-
-        $data = PeopleTapMenu::where('nik',$request->nik)->whereDate('created_at',$dateparam)->first();
+        $datenow = Carbon::now()->format('Y-m-d H:i:s');
+        $dateparam = Carbon::now()->format('Y-m-d');
+        $yearnow = Carbon::now()->format('Y');
+        $monthnow = Carbon::now()->format('m');
+        $daynow = Carbon::now()->format('d');
+     
+        $data = PeopleTapMenu::where('nik', $request->nik)->where('status_tap_in', 1)->whereDate('created_at', $dateparam)->first();
+              
         if (empty($data)) {
-           $save = new PeopleTapMenu();
-           $save->nik = $request->nik;
-           $save->absen_a_time_in = $datenow;
-           $save->status_tap_in = 1;
-           $save = $save->save();
+            $save = new PeopleTapMenu();
+            $save->nik = $request->nik;
+            $save->absen_a_time_in = $datenow;
+            $save->status_tap_in = 1;
+            $save = $save->save();
+
+        }elseif ($data->absen_b_time_in !=null && $data->absen_b_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
+
+        }elseif ($data->absen_c_time_in !=null && $data->absen_c_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
 
         } else {
 
-            if ($data->absen_a_time_in==NULL || $data->absen_a_time_in==null) {
+            if ($data->absen_a_time_in == NULL || $data->absen_a_time_in == null) {
 
-               $data->nik = $request->nik;
-               $data->absen_a_time_in = $datenow;
-               $data->status_tap_in = 1;
-               $save = $data->save();
+                $data->nik = $request->nik;
+                $data->absen_a_time_in = $datenow;
+                $data->status_tap_in = 1;
+                $save = $data->save();
 
-            }elseif ($data->absen_a_time_out==NULL || $data->absen_a_time_out==null) {
+            } elseif ($data->absen_a_time_out == NULL || $data->absen_a_time_out == null) {
 
-              $data->absen_a_time_out = $datenow;
-              $data->status_tap_out = 1;
-              $save = $data->save();
+                $data->absen_a_time_out = $datenow;
+                $data->status_tap_out = 1;
+                $save = $data->save();
 
-            }elseif ($data->absen_a_time_out!=NULL || $data->absen_a_time_out!=null) {
+                $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+                if (empty($getdetail)) {
+                    $save_detail = new DetailTap;
+                    $save_detail->time_out= $datenow;
+                    $save_detail->type_room= 'A';
+                    $save_detail->id_people_tap_menu= $data->id;
+                    $save_detail = $save_detail->save();
 
-              $data->absen_a_time_out = null;
-              $data->status_tap_in = 1;
-              $save = $data->save();
+                }else {
+                    if ($getdetail->time_in==null && $getdetail->time_out != null) {
 
-            }else {
-                 $response = [
-                    'status'=> false,
-                    'message'=> 'Failed to taping'
+                        $getdetail->time_in= $datenow;
+                        $getdetail->type_room= 'A';
+                        $getdetail->id_people_tap_menu= $data->id;
+                        $getdetail->save();
+
+                    } elseif ($getdetail->time_in!=null && $getdetail->time_out != null) {
+                        $save_detail = new DetailTap;
+                        $save_detail->time_out= $datenow;
+                        $save_detail->type_room= 'A';
+                        $save_detail->id_people_tap_menu= $data->id;
+                        $save_detail->save();
+
+                    } else {
+                       
+                    }
+                }
+
+
+            } elseif ($data->absen_a_time_out != NULL || $data->absen_a_time_out != null) {
+                $data->absen_a_time_out = null;
+                $data->status_tap_in = 1;
+                $save = $data->save();
+
+                $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                if ($getdetail->time_in==null && $getdetail->time_out != null) {
+                    $getdetail->time_in= $datenow;
+                    $getdetail->type_room= 'A';
+                    $getdetail->id_people_tap_menu= $data->id;
+                    $save_detail= $getdetail->save();
+
+                } elseif ($getdetail->time_in!=null && $getdetail->time_out != null) {
+                   $save_detail = new DetailTap;
+                   $save_detail->time_out= $datenow;
+                   $save_detail->type_room= 'A';
+                   $save_detail->id_people_tap_menu= $data->id;
+                   $save_detail = $save_detail->save();
+
+                } else {
+                        # code...
+                }
+
+            } else {
+                $response = [
+                    'status' => false,
+                    'message' => 'Failed to taping'
                 ];
                 $http_code = 422;
                 return response($response, $http_code);
             }
-
         }
 
-        if($save){
+        if ($save) {
             $response = [
-             'status'=> true,
-             'message'=> 'Tapping success',
-             'data' => $save,
-         ];
-         $http_code = 200;
+                'status' => true,
+                'message' => 'Tapping success',
+                'data' => $save,
+            ];
+            $http_code = 200;
 
-        }else{
-         $response = [
-            'status'=> false,
-            'message'=> 'Failed to taping'
-        ];
-        $http_code = 422;
-
+        } else {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
         }
-        return response($response, $http_code);
+
+        if (!empty($request->post)) {
+            // return redirect()->back();
+            return redirect()->back()->with('success', 'your message,here');
+
+        } else {
+            return response($response, $http_code);
+        }
+
+        // return response($response, $http_code);
     }
+
     public function taping_b(Request $request)
     {
-        // return $request->all();
-        $datenow=Carbon::now()->format('Y-m-d H:i:s');
-        $dateparam=Carbon::now()->format('Y-m-d');
+        $datenow = Carbon::now()->format('Y-m-d H:i:s');
+        $dateparam = Carbon::now()->format('Y-m-d');
 
+        // $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
+        $data = PeopleTapMenu::where('nik', $request->nik)->where('status_tap_in', 2)->whereDate('created_at', $dateparam)->first();
 
-        $data = PeopleTapMenu::where('nik',$request->nik)->whereDate('created_at',$dateparam)->first();
         if (empty($data)) {
-           $save = new PeopleTapMenu();
-           $save->nik = $request->nik;
-           $save->absen_b_time_in = $datenow;
-           $save->status_tap_in = 2;
-           $save = $save->save();
+            $save = new PeopleTapMenu();
+            $save->nik = $request->nik;
+            $save->absen_b_time_in = $datenow;
+            $save->status_tap_in = 2;
+            $save = $save->save();
 
-        } else {
+        }elseif ($data->absen_a_time_in !=null && $data->absen_a_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
 
-            if ($data->absen_b_time_in==NULL || $data->absen_b_time_in==null) {
+        }elseif ($data->absen_c_time_in !=null && $data->absen_c_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
 
-               $data->absen_b_time_in = $datenow;
-               $data->status_tap_in = 2;
-               $save = $data->save();
+        }else {
 
-            }elseif ($data->absen_b_time_out==NULL || $data->absen_b_time_out==null) {
+            if ($data->absen_b_time_in == NULL || $data->absen_b_time_in == null) {
+                $data->absen_b_time_in = $datenow;
+                $data->status_tap_in = 2;
+                $save = $data->save();
 
-              $data->absen_b_time_out = $datenow;
-              $data->status_tap_out = 2;
-              $save = $data->save();
+            } elseif ($data->absen_b_time_out == NULL || $data->absen_b_time_out == null) {
 
-            }elseif ($data->absen_b_time_out!=NULL || $data->absen_b_time_out!=null) {
+                $data->absen_b_time_out = $datenow;
+                $data->status_tap_out = 2;
+                $save = $data->save();
 
-              $data->absen_b_time_out = null;
-              $data->status_tap_out = 3;
-              $save = $data->save();
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $datenow;
+                $save_detail->type_room= 'B';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail = $save_detail->save();
 
-            }else {
-                 $response = [
-                    'status'=> false,
-                    'message'=> 'Failed to taping'
+            } elseif ($data->absen_b_time_out != NULL || $data->absen_b_time_out != null) {
+                $data->absen_b_time_out = null;
+                $data->status_tap_out = 3;
+                $save = $data->save();
+
+                $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                if ($getdetail->time_in==null && $getdetail->time_out != null) {
+
+                    $getdetail->time_in= $datenow;
+                    $getdetail->type_room= 'B';
+                    $getdetail->id_people_tap_menu= $data->id;
+                    $save_detail= $getdetail->save();
+
+                } elseif ($getdetail->time_in!=null && $getdetail->time_out != null) {
+                     $save_detail = new DetailTap;
+                     $save_detail->time_out= $datenow;
+                     $save_detail->type_room= 'B';
+                     $save_detail->id_people_tap_menu= $data->id;
+                     $save_detail = $save_detail->save();
+
+                } else {
+
+                }
+
+            } else {
+                $response = [
+                    'status' => false,
+                    'message' => 'Failed to taping'
                 ];
                 $http_code = 422;
                 return response($response, $http_code);
             }
-
         }
 
-        if($save){
+        if ($save) {
             $response = [
-             'status'=> true,
-             'message'=> 'Tapping success',
-             'data' => $save,
-         ];
-         $http_code = 200;
+                'status' => true,
+                'message' => 'Tapping success',
+                'data' => $save,
+            ];
+            $http_code = 200;
 
-        }else{
-         $response = [
-            'status'=> false,
-            'message'=> 'Failed to taping'
-        ];
-        $http_code = 422;
-
+        } else {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
         }
-        return response($response, $http_code);
+
+        if (!empty($request->post)) {
+            return redirect()->back()->with('success', 'your message,here');
+
+        } else {
+            return response($response, $http_code);
+        }
+        // return response($response, $http_code);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function taping_c(Request $request)
     {
+        
         // return $request->all();
-        $datenow=Carbon::now()->format('Y-m-d H:i:s');
-        $dateparam=Carbon::now()->format('Y-m-d');
+        $datenow = Carbon::now()->format('Y-m-d H:i:s');
+        $dateparam = Carbon::now()->format('Y-m-d');
 
 
-        $data = PeopleTapMenu::where('nik',$request->nik)->whereDate('created_at',$dateparam)->first();
+        // $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
+        $data = PeopleTapMenu::where('nik', $request->nik)->where('status_tap_in', 3)->whereDate('created_at', $dateparam)->first();
+
         if (empty($data)) {
-           $save = new PeopleTapMenu();
-           $save->nik = $request->nik;
-           $save->absen_c_time_in = $datenow;
-           $save->status_tap_in = 3;
-           $save = $save->save();
+            $save = new PeopleTapMenu();
+            $save->nik = $request->nik;
+            $save->absen_c_time_in = $datenow;
+            $save->status_tap_in = 3;
+            $save = $save->save();
 
-        } else {
+        }elseif ($data->absen_b_time_in !=null && $data->absen_b_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
 
-            if ($data->absen_c_time_in==NULL || $data->absen_c_time_in==null) {
+        }elseif ($data->absen_a_time_in !=null && $data->absen_a_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
 
-               // $data->nik = $request->nik;
-               $data->absen_c_time_in = $datenow;
-               $data->status_tap_in = 3;
-               $save = $data->save();
+        }else {
 
-            }elseif ($data->absen_c_time_out==NULL || $data->absen_c_time_out==null) {
+            if ($data->absen_c_time_in == NULL || $data->absen_c_time_in == null) {
+                // $data->nik = $request->nik;
+                $data->absen_c_time_in = $datenow;
+                $data->status_tap_in = 3;
+                $save = $data->save();
 
-              $data->absen_c_time_out = $datenow;
-              $data->status_tap_out = 3;
-              $save = $data->save();
+            } elseif ($data->absen_c_time_out == NULL || $data->absen_c_time_out == null) {
+                $data->absen_c_time_out = $datenow;
+                $data->status_tap_out = 3;
+                $save = $data->save();
 
-            }elseif ($data->absen_c_time_out!=NULL || $data->absen_c_time_out!=null) {
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $datenow;
+                $save_detail->type_room= 'B';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail = $save_detail->save();
 
-              $data->absen_c_time_out = null;
-              $data->status_tap_in = 3;
-              $save = $data->save();
+            } elseif ($data->absen_c_time_out != NULL || $data->absen_c_time_out != null) {
+                $data->absen_c_time_out = null;
+                $data->status_tap_in = 3;
+                $save = $data->save();
 
-            }else {
-                 $response = [
-                    'status'=> false,
-                    'message'=> 'Failed to taping'
+                $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                if ($getdetail->time_in==null && $getdetail->time_out != null) {
+                    $getdetail->time_in= $datenow;
+                    $getdetail->type_room= 'C';
+                    $getdetail->id_people_tap_menu= $data->id;
+                    $save_detail= $getdetail->save();
+
+                } elseif ($getdetail->time_in!=null && $getdetail->time_out != null) {
+                     $save_detail = new DetailTap;
+                     $save_detail->time_out= $datenow;
+                     $save_detail->type_room= 'C';
+                     $save_detail->id_people_tap_menu= $data->id;
+                     $save_detail = $save_detail->save();
+
+                } else {
+
+                }
+            } else {
+                $response = [
+                    'status' => false,
+                    'message' => 'Failed to taping'
                 ];
                 $http_code = 422;
                 return response($response, $http_code);
             }
-
         }
 
-        if($save){
+        if ($save) {
             $response = [
-             'status'=> true,
-             'message'=> 'Tapping success',
-             'data' => $save,
-         ];
-         $http_code = 200;
+                'status' => true,
+                'message' => 'Tapping success',
+                'data' => $save,
+            ];
+            $http_code = 200;
 
-        }else{
-         $response = [
-            'status'=> false,
-            'message'=> 'Failed to taping'
-        ];
-        $http_code = 422;
+        } else {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+        }
+
+        if (!empty($request->post)) {
+            return redirect()->back()->with('success', 'your message,here');
+
+        } else {
+            return response($response, $http_code);
 
         }
-        return response($response, $http_code);
+        // return response($response, $http_code);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
-        //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
-        //
     }
 }
