@@ -100,7 +100,6 @@ class PeopleController extends Controller
                 'total_duration'=>Carbon::parse($totaldurations)->format('H:i:s')
             ];
         } 
-     
 
         $count = count(PeopleTapMenu::get());
         if ($count / $requestpage <= ($perpage)) {
@@ -137,7 +136,7 @@ class PeopleController extends Controller
             $http_code = 422;
         }
 
-        return view('people.list', ['data' => $data, 'response' => $response, 'datalist' => $datalist]);
+        return view('people.list', ['response' => $response]);
 
     }
 
@@ -153,7 +152,26 @@ class PeopleController extends Controller
         $monthnow = Carbon::now()->format('m');
         $daynow = Carbon::now()->format('d');
      
-        $data = PeopleTapMenu::where('nik', $request->nik)->where('status_tap_in', 1)->whereDate('created_at', $dateparam)->first();
+        $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
+
+        if (!empty($data)) {
+            if ($data->absen_b_time_in!=null && $data->absen_b_time_out==null) {
+                 $response = [
+                    'status' => false,
+                    'message' => 'Failed to taping'
+                ];
+                $http_code = 422;
+                return response($response, $http_code);
+            } 
+            if ($data->absen_c_time_in!=null && $data->absen_c_time_out==null) {
+                $response = [
+                    'status' => false,
+                    'message' => 'Failed to taping'
+                ];
+                $http_code = 422;
+                return response($response, $http_code);
+            }
+        }
               
         if (empty($data)) {
             $save = new PeopleTapMenu();
@@ -287,8 +305,7 @@ class PeopleController extends Controller
         $datenow = Carbon::now()->format('Y-m-d H:i:s');
         $dateparam = Carbon::now()->format('Y-m-d');
 
-        // $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
-        $data = PeopleTapMenu::where('nik', $request->nik)->where('status_tap_in', 2)->whereDate('created_at', $dateparam)->first();
+        $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
 
         if (empty($data)) {
             $save = new PeopleTapMenu();
@@ -398,8 +415,7 @@ class PeopleController extends Controller
         $dateparam = Carbon::now()->format('Y-m-d');
 
 
-        // $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
-        $data = PeopleTapMenu::where('nik', $request->nik)->where('status_tap_in', 3)->whereDate('created_at', $dateparam)->first();
+        $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
 
         if (empty($data)) {
             $save = new PeopleTapMenu();
@@ -507,6 +523,87 @@ class PeopleController extends Controller
 
     public function destroy($id)
     {
+    }
+
+    public function detail_absent()
+    {
+        $perpage = 10;
+        if (empty($request->page)) {
+            $requestpage = 1;
+        } else {
+            $requestpage = $request->page;
+        }
+
+        if ($requestpage == 1) {
+            $page = 1;
+            $limit_page = 0;
+        } else {
+            $limit_page = ($request->page * $perpage) - $perpage;
+        }
+
+        $list_detail = DetailTap::with('people_tap_menu.karyawan')
+                    ->whereNotNull('time_in')
+                    ->offset($limit_page)
+                    ->limit($perpage)
+                    ->get();
+
+        $data_detail = [];
+        if (!empty($list_detail)) {
+            foreach ($list_detail as $key => $value) {
+                if ($value->time_in !=null) {
+                    $rest_duration = Carbon::parse($value->time_in)->diff(Carbon::parse($value->time_out))->format('%H:%I:%S');
+                } else {
+                    $rest_duration = '00:00:00';
+                }
+                
+                $data_detail[] = [
+                    'nama' => $value->people_tap_menu->karyawan->nama,
+                    'nik' => $value->people_tap_menu->nik,
+                    'time_in' => $value->time_in,
+                    'time_out' => $value->time_out,
+                    'type_room' => $value->type_room,
+                    'total_duration_rest' => Carbon::parse($rest_duration)->format('H:i:s'),
+                    'date' => $value->created_at
+                ];
+            }
+        }
+
+        $count = count($data_detail);
+        if ($count / $requestpage <= ($perpage)) {
+
+            $islastpage = true;
+        } else {
+            $islastpage = false;
+        }
+
+        $lastPage = ceil($count / $perpage);
+
+
+        if (count($data_detail) != 0) {
+
+            $response = [
+                "status" => true,
+                "message" => "page berhasil ditampilkan",
+                "data" => $data_detail,
+                "totaldata" => $count,
+                "page" => $requestpage,
+                "last_page" => $lastPage,
+                "is_last_page" => $islastpage
+            ];
+            $http_code = 200;
+        } else {
+            $response = [
+                "status" => false,
+                "message" => "Tidak Ada data page",
+                "totaldata" => $count,
+                "page" => $requestpage,
+                "last_page" => $lastPage,
+                "is_last_page" => $islastpage
+            ];
+            $http_code = 422;
+        }
+       // return $response;
+        return view('people.list_detail', ['response' => $response]);
     }
 
     public function submitform()

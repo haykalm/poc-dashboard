@@ -28,6 +28,17 @@
                 </a>
             </li>
 
+             <hr class="sidebar-divider my-0">
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{url('/people/detail_absent')}}">
+                    <i class="fas fa-fw fa-user-friends"></i>
+                    <span>Detail Absent</span>
+                </a>
+            </li>
+
+            <!-- Divider -->
+
             {{--@if(Auth::User()->role_id == 3)--}} 
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
