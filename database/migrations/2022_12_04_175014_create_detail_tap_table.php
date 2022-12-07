@@ -16,8 +16,8 @@ class CreateDetailTapTable extends Migration
         Schema::create('detail_tap', function (Blueprint $table) {
             $table->id();
             $table->integer('id_people_tap_menu');
-            $table->date('time_out')->nullable();
-            $table->date('time_in')->nullable();
+            $table->datetime('time_out')->nullable();
+            $table->datetime('time_in')->nullable();
             $table->string('type_room');
             $table->timestamps();
         });

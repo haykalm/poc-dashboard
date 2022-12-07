@@ -23,21 +23,13 @@ Route::get('/', function () {
 });
 
 Auth::routes();
+
 Route::get('/tap', [PeopleController::class, 'submitform']);
 Route::post('/people', [PeopleController::class, 'store'])->name('submit-form-a');
-Route::post('people/taping_b',['as' => 'pembayaran.taping_b','uses' => 'App\Http\Controllers\PeopleController@taping_b']);
-Route::post('people/taping_c',['as' => 'pembayaran.taping_c','uses' => 'App\Http\Controllers\PeopleController@taping_c']);
-
-// Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
-// Auth::routes();
-
-// Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('people/detail_absent',['as' => 'people.detail_absent','uses' => 'App\Http\Controllers\PeopleController@detail_absent']);
+Route::get('/people', [PeopleController::class, 'index']);
 
 Route::resource('/dashboard', DashboardController::class);
-
-Route::get('/people', [PeopleController::class, 'index']);
-// submitform
 
 // Route::resource('/people', PeopleController::class);
 

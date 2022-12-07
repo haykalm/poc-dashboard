@@ -22,8 +22,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/people', [PeopleController::class, 'store']);
-Route::post('people/taping_b',['as' => 'pembayaran.taping_b','uses' => 'App\Http\Controllers\PeopleController@taping_b']);
-Route::post('people/taping_c',['as' => 'pembayaran.taping_c','uses' => 'App\Http\Controllers\PeopleController@taping_c']);
+Route::post('people/taping_b',['as' => 'people.taping_b','uses' => 'App\Http\Controllers\PeopleController@taping_b']);
+Route::post('people/taping_c',['as' => 'people.taping_c','uses' => 'App\Http\Controllers\PeopleController@taping_c']);
 
 
 
