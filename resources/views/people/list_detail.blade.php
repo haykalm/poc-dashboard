@@ -31,7 +31,7 @@
                     @if(!empty($response['data']))
                         @foreach($response['data'] as $datail => $value)
                         <tr style="vertical-align: middle;text-align: center;font-size: 13px;">
-                            <td width="5%">{{ $data +1 }}</td>
+                            <td width="5%">{{ $datail +1 }}</td>
                             <td width="10%">{{ $value['nik'] }}</td>
                             <td width="20%" style="text-transform: uppercase;">{{ $value['nama'] }}</td>
 

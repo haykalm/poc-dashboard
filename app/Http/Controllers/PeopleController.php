@@ -603,7 +603,7 @@ class PeopleController extends Controller
             ];
             $http_code = 422;
         }
-       // return $response;
+    //    return $response;
         return view('people.list_detail', ['response' => $response]);
     }
 
