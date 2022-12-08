@@ -3,20 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\PeopleTapMenu;
-use App\Models\User;
-use App\Models\Karyawan;
+use App\Models\{
+    User,
+    Karyawan,
+    DetailTap,
+    PeopleTapMenu,
+};
 use Carbon\Carbon;
 use Session;
 
 
 class PeopleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    
     public function index(Request $request)
     {
         $perpage = 10;
@@ -101,7 +100,7 @@ class PeopleController extends Controller
                 'c_duration' => $c_duration,
                 'total_duration'=>Carbon::parse($totaldurations)->format('H:i:s')
             ];
-        }
+        } 
 
         $count = count(PeopleTapMenu::get());
         if ($count / $requestpage <= ($perpage)) {
@@ -138,40 +137,66 @@ class PeopleController extends Controller
             $http_code = 422;
         }
 
-        return view('people.list', ['data' => $data, 'response' => $response, 'datalist' => $datalist]);
+        return view('people.list', ['response' => $response]);
 
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create()
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-        //  return $request->all();
         $datenow = Carbon::now()->format('Y-m-d H:i:s');
         $dateparam = Carbon::now()->format('Y-m-d');
-
-
+        $yearnow = Carbon::now()->format('Y');
+        $monthnow = Carbon::now()->format('m');
+        $daynow = Carbon::now()->format('d');
+     
         $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
+
+        if (!empty($data)) {
+            if ($data->absen_b_time_in!=null && $data->absen_b_time_out==null) {
+                 $response = [
+                    'status' => false,
+                    'message' => 'Failed to taping'
+                ];
+                $http_code = 422;
+                return response($response, $http_code);
+            } 
+            if ($data->absen_c_time_in!=null && $data->absen_c_time_out==null) {
+                $response = [
+                    'status' => false,
+                    'message' => 'Failed to taping'
+                ];
+                $http_code = 422;
+                return response($response, $http_code);
+            }
+        }
+              
         if (empty($data)) {
             $save = new PeopleTapMenu();
             $save->nik = $request->nik;
             $save->absen_a_time_in = $datenow;
             $save->status_tap_in = 1;
             $save = $save->save();
+
+        }elseif ($data->absen_b_time_in !=null && $data->absen_b_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
+
+        }elseif ($data->absen_c_time_in !=null && $data->absen_c_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
+
         } else {
 
             if ($data->absen_a_time_in == NULL || $data->absen_a_time_in == null) {
@@ -180,16 +205,66 @@ class PeopleController extends Controller
                 $data->absen_a_time_in = $datenow;
                 $data->status_tap_in = 1;
                 $save = $data->save();
+
             } elseif ($data->absen_a_time_out == NULL || $data->absen_a_time_out == null) {
 
                 $data->absen_a_time_out = $datenow;
                 $data->status_tap_out = 1;
                 $save = $data->save();
-            } elseif ($data->absen_a_time_out != NULL || $data->absen_a_time_out != null) {
 
+                $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+                if (empty($getdetail)) {
+                    $save_detail = new DetailTap;
+                    $save_detail->time_out= $datenow;
+                    $save_detail->type_room= 'A';
+                    $save_detail->id_people_tap_menu= $data->id;
+                    $save_detail = $save_detail->save();
+
+                }else {
+                    if ($getdetail->time_in==null && $getdetail->time_out != null) {
+
+                        $getdetail->time_in= $datenow;
+                        $getdetail->type_room= 'A';
+                        $getdetail->id_people_tap_menu= $data->id;
+                        $getdetail->save();
+
+                    } elseif ($getdetail->time_in!=null && $getdetail->time_out != null) {
+                        $save_detail = new DetailTap;
+                        $save_detail->time_out= $datenow;
+                        $save_detail->type_room= 'A';
+                        $save_detail->id_people_tap_menu= $data->id;
+                        $save_detail->save();
+
+                    } else {
+                       
+                    }
+                }
+
+
+            } elseif ($data->absen_a_time_out != NULL || $data->absen_a_time_out != null) {
                 $data->absen_a_time_out = null;
                 $data->status_tap_in = 1;
                 $save = $data->save();
+
+                $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                if ($getdetail->time_in==null && $getdetail->time_out != null) {
+                    $getdetail->time_in= $datenow;
+                    $getdetail->type_room= 'A';
+                    $getdetail->id_people_tap_menu= $data->id;
+                    $save_detail= $getdetail->save();
+
+                } elseif ($getdetail->time_in!=null && $getdetail->time_out != null) {
+                   $save_detail = new DetailTap;
+                   $save_detail->time_out= $datenow;
+                   $save_detail->type_room= 'A';
+                   $save_detail->id_people_tap_menu= $data->id;
+                   $save_detail = $save_detail->save();
+
+                } else {
+                        # code...
+                }
+
             } else {
                 $response = [
                     'status' => false,
@@ -214,46 +289,92 @@ class PeopleController extends Controller
             ];
             $http_code = 422;
         }
+
         if (!empty($request->post)) {
             // return redirect()->back();
             return redirect()->back()->with('success', 'your message,here');
+
         } else {
             return response($response, $http_code);
         }
 
         // return response($response, $http_code);
     }
+
     public function taping_b(Request $request)
     {
-        // return $request->all();
         $datenow = Carbon::now()->format('Y-m-d H:i:s');
         $dateparam = Carbon::now()->format('Y-m-d');
 
-
         $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
+
         if (empty($data)) {
             $save = new PeopleTapMenu();
             $save->nik = $request->nik;
             $save->absen_b_time_in = $datenow;
             $save->status_tap_in = 2;
             $save = $save->save();
-        } else {
+
+        }elseif ($data->absen_a_time_in !=null && $data->absen_a_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
+
+        }elseif ($data->absen_c_time_in !=null && $data->absen_c_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
+
+        }else {
 
             if ($data->absen_b_time_in == NULL || $data->absen_b_time_in == null) {
-
                 $data->absen_b_time_in = $datenow;
                 $data->status_tap_in = 2;
                 $save = $data->save();
+
             } elseif ($data->absen_b_time_out == NULL || $data->absen_b_time_out == null) {
 
                 $data->absen_b_time_out = $datenow;
                 $data->status_tap_out = 2;
                 $save = $data->save();
-            } elseif ($data->absen_b_time_out != NULL || $data->absen_b_time_out != null) {
 
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $datenow;
+                $save_detail->type_room= 'B';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail = $save_detail->save();
+
+            } elseif ($data->absen_b_time_out != NULL || $data->absen_b_time_out != null) {
                 $data->absen_b_time_out = null;
                 $data->status_tap_out = 3;
                 $save = $data->save();
+
+                $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                if ($getdetail->time_in==null && $getdetail->time_out != null) {
+
+                    $getdetail->time_in= $datenow;
+                    $getdetail->type_room= 'B';
+                    $getdetail->id_people_tap_menu= $data->id;
+                    $save_detail= $getdetail->save();
+
+                } elseif ($getdetail->time_in!=null && $getdetail->time_out != null) {
+                     $save_detail = new DetailTap;
+                     $save_detail->time_out= $datenow;
+                     $save_detail->type_room= 'B';
+                     $save_detail->id_people_tap_menu= $data->id;
+                     $save_detail = $save_detail->save();
+
+                } else {
+
+                }
+
             } else {
                 $response = [
                     'status' => false,
@@ -287,44 +408,81 @@ class PeopleController extends Controller
         // return response($response, $http_code);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function taping_c(Request $request)
     {
+        
         // return $request->all();
         $datenow = Carbon::now()->format('Y-m-d H:i:s');
         $dateparam = Carbon::now()->format('Y-m-d');
 
 
         $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
+
         if (empty($data)) {
             $save = new PeopleTapMenu();
             $save->nik = $request->nik;
             $save->absen_c_time_in = $datenow;
             $save->status_tap_in = 3;
             $save = $save->save();
-        } else {
+
+        }elseif ($data->absen_b_time_in !=null && $data->absen_b_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
+
+        }elseif ($data->absen_a_time_in !=null && $data->absen_a_time_out ==null ) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 422;
+            return response($response, $http_code);
+
+        }else {
 
             if ($data->absen_c_time_in == NULL || $data->absen_c_time_in == null) {
-
                 // $data->nik = $request->nik;
                 $data->absen_c_time_in = $datenow;
                 $data->status_tap_in = 3;
                 $save = $data->save();
-            } elseif ($data->absen_c_time_out == NULL || $data->absen_c_time_out == null) {
 
+            } elseif ($data->absen_c_time_out == NULL || $data->absen_c_time_out == null) {
                 $data->absen_c_time_out = $datenow;
                 $data->status_tap_out = 3;
                 $save = $data->save();
-            } elseif ($data->absen_c_time_out != NULL || $data->absen_c_time_out != null) {
 
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $datenow;
+                $save_detail->type_room= 'B';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail = $save_detail->save();
+
+            } elseif ($data->absen_c_time_out != NULL || $data->absen_c_time_out != null) {
                 $data->absen_c_time_out = null;
                 $data->status_tap_in = 3;
                 $save = $data->save();
+
+                $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                if ($getdetail->time_in==null && $getdetail->time_out != null) {
+                    $getdetail->time_in= $datenow;
+                    $getdetail->type_room= 'C';
+                    $getdetail->id_people_tap_menu= $data->id;
+                    $save_detail= $getdetail->save();
+
+                } elseif ($getdetail->time_in!=null && $getdetail->time_out != null) {
+                     $save_detail = new DetailTap;
+                     $save_detail->time_out= $datenow;
+                     $save_detail->type_room= 'C';
+                     $save_detail->id_people_tap_menu= $data->id;
+                     $save_detail = $save_detail->save();
+
+                } else {
+
+                }
             } else {
                 $response = [
                     'status' => false,
@@ -349,35 +507,104 @@ class PeopleController extends Controller
             ];
             $http_code = 422;
         }
+
         if (!empty($request->post)) {
             return redirect()->back()->with('success', 'your message,here');
+
         } else {
             return response($response, $http_code);
+
         }
         // return response($response, $http_code);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
-        //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
-        //
+    }
+
+    public function detail_absent()
+    {
+        $perpage = 10;
+        if (empty($request->page)) {
+            $requestpage = 1;
+        } else {
+            $requestpage = $request->page;
+        }
+
+        if ($requestpage == 1) {
+            $page = 1;
+            $limit_page = 0;
+        } else {
+            $limit_page = ($request->page * $perpage) - $perpage;
+        }
+
+        $list_detail = DetailTap::with('people_tap_menu.karyawan')
+                    ->whereNotNull('time_in')
+                    ->offset($limit_page)
+                    ->limit($perpage)
+                    ->get();
+
+        $data_detail = [];
+        if (!empty($list_detail)) {
+            foreach ($list_detail as $key => $value) {
+                if ($value->time_in !=null) {
+                    $rest_duration = Carbon::parse($value->time_in)->diff(Carbon::parse($value->time_out))->format('%H:%I:%S');
+                } else {
+                    $rest_duration = '00:00:00';
+                }
+                
+                $data_detail[] = [
+                    'nama' => $value->people_tap_menu->karyawan->nama,
+                    'nik' => $value->people_tap_menu->nik,
+                    'time_in' => $value->time_in,
+                    'time_out' => $value->time_out,
+                    'type_room' => $value->type_room,
+                    'total_duration_rest' => Carbon::parse($rest_duration)->format('H:i:s'),
+                    'date' => $value->created_at
+                ];
+            }
+        }
+
+        $count = count($data_detail);
+        if ($count / $requestpage <= ($perpage)) {
+
+            $islastpage = true;
+        } else {
+            $islastpage = false;
+        }
+
+        $lastPage = ceil($count / $perpage);
+
+
+        if (count($data_detail) != 0) {
+
+            $response = [
+                "status" => true,
+                "message" => "page berhasil ditampilkan",
+                "data" => $data_detail,
+                "totaldata" => $count,
+                "page" => $requestpage,
+                "last_page" => $lastPage,
+                "is_last_page" => $islastpage
+            ];
+            $http_code = 200;
+        } else {
+            $response = [
+                "status" => false,
+                "message" => "Tidak Ada data page",
+                "totaldata" => $count,
+                "page" => $requestpage,
+                "last_page" => $lastPage,
+                "is_last_page" => $islastpage
+            ];
+            $http_code = 422;
+        }
+       // return $response;
+        return view('people.list_detail', ['response' => $response]);
     }
 
     public function submitform()

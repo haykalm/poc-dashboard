@@ -23,4 +23,9 @@ class PeopleTapMenu extends Model
 		'status_tap_out',
 	];
 
+	public function karyawan()
+    {
+    	return $this->hasOne(Karyawan::class,'nik','nik');
+    }
+
 }
