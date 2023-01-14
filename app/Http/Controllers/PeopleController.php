@@ -30,7 +30,7 @@ class PeopleController extends Controller
         } else {
             $limit_page = ($request->page * $perpage) - $perpage;
         }
-        
+       
 
         $data = PeopleTapMenu::select('people_tap_menu.*', 'karyawan.nama', 'karyawan.email', 'karyawan.departemen')
             ->join('karyawan', 'karyawan.nik', '=', 'people_tap_menu.nik')
@@ -645,8 +645,8 @@ class PeopleController extends Controller
             ];
             $http_code = 422;
         }
-       // return $response;
-        return view('people.list_detail', ['response' => $response]);
+    //    return $response;
+      return view('people.list_detail', ['response' => $response]);
     }
 
     public function submitform()
