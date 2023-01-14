@@ -19,8 +19,8 @@
                         <th width="5%">No</th>
                         <th width="7%">NIK</th>
                         <th width="20%">Name</th>
-                        <th width="10%">In</th>
                         <th width="10%">Out</th>
+                        <th width="10%">In</th>
                         <th width="10%">Status</th>
                         <th width="10%">Rest Duration</th>
                         <th width="10%">Date</th>
@@ -31,15 +31,15 @@
                     @if(!empty($response['data']))
                         @foreach($response['data'] as $datail => $value)
                         <tr style="vertical-align: middle;text-align: center;font-size: 13px;">
-                            <td width="5%">{{ $data +1 }}</td>
+                            <td width="5%">{{ $datail +1 }}</td>
                             <td width="10%">{{ $value['nik'] }}</td>
                             <td width="20%" style="text-transform: uppercase;">{{ $value['nama'] }}</td>
 
                             <td width="10%">
-                                {{ date("H:i:s",strtotime($value['time_in'])) }}
+                                {{ date("H:i:s",strtotime($value['time_out'])) }}
                             </td>
                             <td width="10%">
-                                {{ date("H:i:s",strtotime($value['time_out'])) }}
+                                {{ date("H:i:s",strtotime($value['time_in'])) }}
                             </td>
                             <td width="10%">
                                 {{ $value['type_room'] }}

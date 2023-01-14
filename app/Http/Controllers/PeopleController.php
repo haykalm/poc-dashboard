@@ -12,7 +12,6 @@ use App\Models\{
 use Carbon\Carbon;
 use Session;
 
-
 class PeopleController extends Controller
 {
     
@@ -31,6 +30,7 @@ class PeopleController extends Controller
         } else {
             $limit_page = ($request->page * $perpage) - $perpage;
         }
+        
 
         $data = PeopleTapMenu::select('people_tap_menu.*', 'karyawan.nama', 'karyawan.email', 'karyawan.departemen')
             ->join('karyawan', 'karyawan.nik', '=', 'people_tap_menu.nik')
@@ -39,66 +39,80 @@ class PeopleController extends Controller
             ->orderBy('created_at', 'DESC')
             ->get();
         $datalist = [];
-        foreach ($data as $key => $value) {
-            if ($value->absen_a_time_out != null) {
-                $a_duration = Carbon::parse($value->absen_a_time_in)->diff(Carbon::parse($value->absen_a_time_out))->format('%H:%I:%S');
-            } else {
-                $a_duration = '00:00:00';
-            }
-            if ($value->absen_b_time_out != null) {
-                $b_duration = Carbon::parse($value->absen_b_time_in)->diff(Carbon::parse($value->absen_b_time_out))->format('%H:%I:%S');
-            } else {
-                $b_duration = '00:00:00';
-            }
-            if ($value->absen_c_time_out != null) {
-                $c_duration = Carbon::parse($value->absen_c_time_in)->diff(Carbon::parse($value->absen_c_time_out))->format('%H:%I:%S');
-            } else {
-                $c_duration = '00:00:00';
-            }
-            $a_explode=explode(':',$a_duration);
-            $b_explode=explode(':',$b_duration);
-            $c_explode=explode(':',$c_duration);
-            $totalhour=$a_explode[0]+$b_explode[0]+$c_explode[0];
-            $totalminutes=$a_explode[1]+$b_explode[1]+$c_explode[1];
-            $totalsecond=$a_explode[2]+$b_explode[2]+$c_explode[2];
-            $minutes=$totalminutes;
-            $second=$totalsecond;
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
 
-            if ($totalminutes==60) {
-                $hour=$totalhour+1;
-                $minutes=0;
-            }elseif($totalminutes<60 && $totalsecond>=60 ){
-                $hour=$totalhour;
-                $minutes=$totalminutes+1;
-                $second=0;
-            }elseif($totalminutes<60 && $totalsecond<60 ){
-                $hour=$totalhour;
-                $minutes=$totalminutes;
-                $second=$totalsecond+0;
-            }else{
-                $hour=$totalhour;
-                $minutes=$totalminutes;
-                $second=$totalsecond;
+                if ($value->absen_a_time_out != null) {
+                    // $a_duration = Carbon::parse($value->absen_a_time_out)->diff(Carbon::parse($value->absen_a_time_in))->format('%H:%I:%S');
+                    $a_in = Carbon::parse($value->absen_a_time_in);
+                    $a_out = Carbon::parse($value->absen_a_time_out);
+                    $a_duration = $a_in->diffInSeconds($a_out);
+                    $duration_a =  gmdate('H:i:s',$a_duration);
+                } else {
+                    $duration_a = '00:00:00';
+                }
+                if ($value->absen_b_time_out != null) {
+                    // $b_duration = Carbon::parse($value->absen_b_time_out)->diff(Carbon::parse($value->absen_b_time_in))->format('%H:%I:%S');
+                    $b_in = Carbon::parse($value->absen_b_time_in);
+                    $b_out = Carbon::parse($value->absen_b_time_out);
+                    $b_duration = $b_in->diffInSeconds($b_out);
+                    $duration_b =  gmdate('H:i:s',$b_duration);
+                } else {
+                    $duration_b = '00:00:00';
+                }
+                if ($value->absen_c_time_out != null) {
+                    // $c_duration = Carbon::parse($value->absen_c_time_out)->diff(Carbon::parse($value->absen_c_time_in))->format('%H:%I:%S');
+                    $c_in = Carbon::parse($value->absen_c_time_in);
+                    $c_out = Carbon::parse($value->absen_c_time_out);
+                    $c_duration = $c_in->diffInSeconds($c_out);
+                    $duration_c =  gmdate('H:i:s',$c_duration);
+                } else {
+                    $duration_c = '00:00:00';
+                }
+
+                if ($value->absen_a_time_out != null && $value->absen_b_time_out == null && $value->absen_c_time_out == null) {
+                    $totaldurations = intval($a_duration);
+                    $totaldurations = gmdate('H:i:s',$totaldurations);
+                }elseif ($value->absen_a_time_out == null && $value->absen_b_time_out != null && $value->absen_c_time_out == null) {
+                    $totaldurations = intval($b_duration);
+                    $totaldurations = gmdate('H:i:s',$totaldurations);
+                }elseif ($value->absen_a_time_out == null && $value->absen_b_time_out == null && $value->absen_c_time_out != null) {
+                    $totaldurations = intval($c_duration);
+                    $totaldurations = gmdate('H:i:s',$totaldurations);
+                }elseif ($value->absen_a_time_out != null && $value->absen_b_time_out != null && $value->absen_c_time_out != null) {
+                    $totaldurations = intval($a_duration)+intval($b_duration)+intval($c_duration);
+                    $totaldurations = gmdate('H:i:s',$totaldurations);
+                }elseif ($value->absen_a_time_out != null && $value->absen_b_time_out != null && $value->absen_c_time_out == null) {
+                    $totaldurations = intval($a_duration)+intval($b_duration);
+                    $totaldurations = gmdate('H:i:s',$totaldurations);
+                }elseif ($value->absen_a_time_out != null && $value->absen_b_time_out == null && $value->absen_c_time_out != null) {
+                    $totaldurations = intval($a_duration)+intval($c_duration);
+                    $totaldurations = gmdate('H:i:s',$totaldurations);
+                }elseif ($value->absen_a_time_out == null && $value->absen_b_time_out != null && $value->absen_c_time_out != null) {
+                    $totaldurations = intval($b_duration)+intval($c_duration);
+                    $totaldurations = gmdate('H:i:s',$totaldurations);
+                }else {
+                    $totaldurations = '00:00:00';
+                }
+
+                $datalist[] = [
+                    'nik' => $value->nik,
+                    'nama' => $value->nama,
+                    'absen_a_time_in' => $value->absen_a_time_in,
+                    'absen_a_time_out' => $value->absen_a_time_out,
+                    'absen_b_time_in' => $value->absen_b_time_in,
+                    'absen_b_time_out' => $value->absen_b_time_out,
+                    'absen_c_time_in' => $value->absen_c_time_in,
+                    'absen_c_time_out' => $value->absen_c_time_out,
+                    'status_tap_in' => $value->status_tap_in,
+                    'status_tap_out' => $value->status_tap_out,
+                    'created_at' => $value->created_at,
+                    'a_duration' => Carbon::parse($duration_a)->format('H:i:s'),
+                    'b_duration' => Carbon::parse($duration_b)->format('H:i:s'),
+                    'c_duration' => Carbon::parse($duration_c)->format('H:i:s'),
+                    'total_duration'=> Carbon::parse($totaldurations)->format('H:i:s')
+                ];
             }
-            $totaldurations=$hour.':'.$minutes.':'.$second;
-            
-            $datalist[] = [
-                'nik' => $value->nik,
-                'nama' => $value->nama,
-                'absen_a_time_in' => $value->absen_a_time_in,
-                'absen_a_time_out' => $value->absen_a_time_out,
-                'absen_b_time_in' => $value->absen_b_time_in,
-                'absen_b_time_out' => $value->absen_b_time_out,
-                'absen_c_time_in' => $value->absen_c_time_in,
-                'absen_c_time_out' => $value->absen_c_time_out,
-                'status_tap_in' => $value->status_tap_in,
-                'status_tap_out' => $value->status_tap_out,
-                'created_at' => $value->created_at,
-                'a_duration' => $a_duration,
-                'b_duration' => $b_duration,
-                'c_duration' => $c_duration,
-                'total_duration'=>Carbon::parse($totaldurations)->format('H:i:s')
-            ];
         } 
 
         $count = count(PeopleTapMenu::get());
@@ -155,21 +169,32 @@ class PeopleController extends Controller
         $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
 
         if (!empty($data)) {
+
+            $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
             if ($data->absen_b_time_in!=null && $data->absen_b_time_out==null) {
-                 $response = [
-                    'status' => false,
-                    'message' => 'Failed to taping'
-                ];
-                $http_code = 422;
-                return response($response, $http_code);
+                $data->absen_b_time_out = $datenow;
+                $data->status_tap_out = 2;
+                $save = $data->save();
+
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $data->absen_b_time_out;
+                $save_detail->time_in= $data->absen_b_time_in;
+                $save_detail->type_room= 'B';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail->save();
             } 
             if ($data->absen_c_time_in!=null && $data->absen_c_time_out==null) {
-                $response = [
-                    'status' => false,
-                    'message' => 'Failed to taping'
-                ];
-                $http_code = 422;
-                return response($response, $http_code);
+                $data->absen_c_time_out = $datenow;
+                $data->status_tap_out = 3;
+                $save = $data->save();
+
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $data->absen_c_time_out;
+                $save_detail->time_in= $data->absen_c_time_in;
+                $save_detail->type_room= 'C';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail->save();
             }
         }
               
@@ -179,22 +204,6 @@ class PeopleController extends Controller
             $save->absen_a_time_in = $datenow;
             $save->status_tap_in = 1;
             $save = $save->save();
-
-        }elseif ($data->absen_b_time_in !=null && $data->absen_b_time_out ==null ) {
-            $response = [
-                'status' => false,
-                'message' => 'Failed to taping'
-            ];
-            $http_code = 422;
-            return response($response, $http_code);
-
-        }elseif ($data->absen_c_time_in !=null && $data->absen_c_time_out ==null ) {
-            $response = [
-                'status' => false,
-                'message' => 'Failed to taping'
-            ];
-            $http_code = 422;
-            return response($response, $http_code);
 
         } else {
 
@@ -307,6 +316,36 @@ class PeopleController extends Controller
 
         $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
 
+        if (!empty($data)) {
+
+            $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+            if ($data->absen_a_time_in !=null && $data->absen_a_time_out ==null) {
+                $data->absen_a_time_out = $datenow;
+                $data->status_tap_out = 1;
+                $save = $data->save();
+
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $data->absen_a_time_out;
+                $save_detail->time_in= $data->absen_a_time_in;
+                $save_detail->type_room= 'A';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail->save();
+            } 
+            if ($data->absen_c_time_in!=null && $data->absen_c_time_out==null) {
+                $data->absen_c_time_out = $datenow;
+                $data->status_tap_out = 3;
+                $save = $data->save();
+
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $data->absen_c_time_out;
+                $save_detail->time_in= $data->absen_c_time_in;
+                $save_detail->type_room= 'C';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail->save();
+            }
+        }
+
         if (empty($data)) {
             $save = new PeopleTapMenu();
             $save->nik = $request->nik;
@@ -314,23 +353,7 @@ class PeopleController extends Controller
             $save->status_tap_in = 2;
             $save = $save->save();
 
-        }elseif ($data->absen_a_time_in !=null && $data->absen_a_time_out ==null ) {
-            $response = [
-                'status' => false,
-                'message' => 'Failed to taping'
-            ];
-            $http_code = 422;
-            return response($response, $http_code);
-
-        }elseif ($data->absen_c_time_in !=null && $data->absen_c_time_out ==null ) {
-            $response = [
-                'status' => false,
-                'message' => 'Failed to taping'
-            ];
-            $http_code = 422;
-            return response($response, $http_code);
-
-        }else {
+        } else {
 
             if ($data->absen_b_time_in == NULL || $data->absen_b_time_in == null) {
                 $data->absen_b_time_in = $datenow;
@@ -417,6 +440,36 @@ class PeopleController extends Controller
 
         $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
 
+        if (!empty($data)) {
+
+            $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+            if ($data->absen_a_time_in !=null && $data->absen_a_time_out ==null) {
+                $data->absen_a_time_out = $datenow;
+                $data->status_tap_out = 1;
+                $save = $data->save();
+
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $data->absen_a_time_out;
+                $save_detail->time_in= $data->absen_a_time_in;
+                $save_detail->type_room= 'A';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail->save();
+            } 
+            if ($data->absen_b_time_in!=null && $data->absen_b_time_out==null) {
+                $data->absen_b_time_out = $datenow;
+                $data->status_tap_out = 2;
+                $save = $data->save();
+
+                $save_detail = new DetailTap;
+                $save_detail->time_out= $data->absen_b_time_out;
+                $save_detail->time_in= $data->absen_b_time_in;
+                $save_detail->type_room= 'B';
+                $save_detail->id_people_tap_menu= $data->id;
+                $save_detail->save();
+            }
+        }
+
         if (empty($data)) {
             $save = new PeopleTapMenu();
             $save->nik = $request->nik;
@@ -424,23 +477,7 @@ class PeopleController extends Controller
             $save->status_tap_in = 3;
             $save = $save->save();
 
-        }elseif ($data->absen_b_time_in !=null && $data->absen_b_time_out ==null ) {
-            $response = [
-                'status' => false,
-                'message' => 'Failed to taping'
-            ];
-            $http_code = 422;
-            return response($response, $http_code);
-
-        }elseif ($data->absen_a_time_in !=null && $data->absen_a_time_out ==null ) {
-            $response = [
-                'status' => false,
-                'message' => 'Failed to taping'
-            ];
-            $http_code = 422;
-            return response($response, $http_code);
-
-        }else {
+        } else {
 
             if ($data->absen_c_time_in == NULL || $data->absen_c_time_in == null) {
                 // $data->nik = $request->nik;
@@ -550,11 +587,17 @@ class PeopleController extends Controller
         $data_detail = [];
         if (!empty($list_detail)) {
             foreach ($list_detail as $key => $value) {
+
                 if ($value->time_in !=null) {
-                    $rest_duration = Carbon::parse($value->time_in)->diff(Carbon::parse($value->time_out))->format('%H:%I:%S');
+                    // $rest_duration = Carbon::parse($value->time_in)->diff(Carbon::parse($value->time_out))->format('%H:%I:%S');
+                    $in = Carbon::parse($value->time_in);
+                    $out = Carbon::parse($value->time_out);
+                    $rest_duration = $in->diffInSeconds($out);
+                    $rest_duration =  gmdate('H:i:s',$rest_duration);
                 } else {
                     $rest_duration = '00:00:00';
                 }
+
                 
                 $data_detail[] = [
                     'nama' => $value->people_tap_menu->karyawan->nama,
