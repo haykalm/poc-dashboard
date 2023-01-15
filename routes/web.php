@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
 	DashboardController,
 	PeopleController,
+	karyawanController,
 };
 
 /*
@@ -14,7 +15,7 @@ use App\Http\Controllers\{
 |
 | Here is where you can register web routes for your application. These
 | routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
+| contains the "Web" middleware group. Now create something great!
 |
 */
 
@@ -31,5 +32,5 @@ Route::get('/people', [PeopleController::class, 'index']);
 
 Route::resource('/dashboard', DashboardController::class);
 
-// Route::resource('/people', PeopleController::class);
+Route::resource('/karyawan', karyawanController::class);
 

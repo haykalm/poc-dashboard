@@ -9,12 +9,14 @@ list people absen
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-gray-500">List absent</h6>
-
+        <a href="{{url('/karyawan')}}" class="btn btn-outline-primary py-1" style="margin-left: 2px; float: right;margin-right: 30px">List Karyawan</a>
     </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-bordered" id="dataTable" width="105%" cellspacing="0">
                 <thead>
+                    <!-- <a class="btn btn-outline-success mb-1">Print</a> -->
+
                     <tr>
                         <th rowspan="2" style="vertical-align: middle;text-align: center;" width="5%">No</th>
                         <th rowspan="2" style="vertical-align: middle;text-align: center;" width="5%">NIK</th>
