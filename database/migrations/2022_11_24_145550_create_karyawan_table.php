@@ -17,7 +17,7 @@ class CreateKaryawanTable extends Migration
             $table->id();
             $table->string('nik')->unique();
             $table->string('nama')->nullable();
-            $table->string('email')->unique();
+            $table->string('email')->unique()->nullable();
             $table->string('departemen')->nullable();
             $table->string('tgl_lahir')->nullable();
             $table->string('no_hp')->nullable();
