@@ -166,8 +166,19 @@ class PeopleController extends Controller
         $monthnow = Carbon::now()->format('m');
         $daynow = Carbon::now()->format('d');
      
-        $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
+        $karyawan  = Karyawan::where('nik', $request->nik)->first();
 
+        if (empty($karyawan)) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 404;
+            return response()->json($response, $http_code);
+        }
+
+       
+        $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->orderBy('created_at', 'DESC')->first();
         if (!empty($data)) {
 
             $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
@@ -197,7 +208,7 @@ class PeopleController extends Controller
                 $save_detail->save();
             }
         }
-              
+
         if (empty($data)) {
             $save = new PeopleTapMenu();
             $save->nik = $request->nik;
@@ -244,12 +255,11 @@ class PeopleController extends Controller
                         $save_detail->save();
 
                     } else {
-                       
+
                     }
                 }
 
-
-            } elseif ($data->absen_a_time_out != NULL || $data->absen_a_time_out != null) {
+            } elseif ($data->absen_a_time_out != null && $data->absen_b_time_out == null && $data->absen_c_time_out == null) {
                 $data->absen_a_time_out = null;
                 $data->status_tap_in = 1;
                 $save = $data->save();
@@ -263,16 +273,34 @@ class PeopleController extends Controller
                     $save_detail= $getdetail->save();
 
                 } elseif ($getdetail->time_in!=null && $getdetail->time_out != null) {
-                   $save_detail = new DetailTap;
-                   $save_detail->time_out= $datenow;
-                   $save_detail->type_room= 'A';
-                   $save_detail->id_people_tap_menu= $data->id;
-                   $save_detail = $save_detail->save();
+                 $save_detail = new DetailTap;
+                 $save_detail->time_out= $datenow;
+                 $save_detail->type_room= 'A';
+                 $save_detail->id_people_tap_menu= $data->id;
+                 $save_detail = $save_detail->save();
 
                 } else {
-                        # code...
+                            //
                 }
 
+            }elseif ($data->absen_a_time_out != null && $data->absen_b_time_out != null && $data->absen_c_time_out != null) {
+                $save = new PeopleTapMenu();
+                $save->nik = $request->nik;
+                $save->absen_a_time_in = $datenow;
+                $save->status_tap_in = 1;
+                $save = $save->save();
+            }elseif ($data->absen_a_time_out != null && $data->absen_b_time_out != null && $data->absen_c_time_out == null) {
+                $save = new PeopleTapMenu();
+                $save->nik = $request->nik;
+                $save->absen_a_time_in = $datenow;
+                $save->status_tap_in = 1;
+                $save = $save->save();
+            }elseif ($data->absen_a_time_out != null && $data->absen_b_time_out == null && $data->absen_c_time_out != null) {
+                $save = new PeopleTapMenu();
+                $save->nik = $request->nik;
+                $save->absen_a_time_in = $datenow;
+                $save->status_tap_in = 1;
+                $save = $save->save();
             } else {
                 $response = [
                     'status' => false,
@@ -298,6 +326,8 @@ class PeopleController extends Controller
             $http_code = 422;
         }
 
+
+
         if (!empty($request->post)) {
             // return redirect()->back();
             return redirect()->back()->with('success', 'your message,here');
@@ -314,7 +344,18 @@ class PeopleController extends Controller
         $datenow = Carbon::now()->format('Y-m-d H:i:s');
         $dateparam = Carbon::now()->format('Y-m-d');
 
-        $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
+        $karyawan  = Karyawan::where('nik', $request->nik)->first();
+
+        if (empty($karyawan)) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 404;
+            return response()->json($response, $http_code);
+        }
+
+        $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->orderBy('created_at', 'DESC')->first();
 
         if (!empty($data)) {
 
@@ -372,7 +413,7 @@ class PeopleController extends Controller
                 $save_detail->id_people_tap_menu= $data->id;
                 $save_detail = $save_detail->save();
 
-            } elseif ($data->absen_b_time_out != NULL || $data->absen_b_time_out != null) {
+            } elseif ($data->absen_b_time_out != NULL && $data->absen_a_time_out == null && $data->absen_c_time_out == null) {
                 $data->absen_b_time_out = null;
                 $data->status_tap_out = 3;
                 $save = $data->save();
@@ -397,6 +438,24 @@ class PeopleController extends Controller
 
                 }
 
+            } elseif ($data->absen_a_time_out != null && $data->absen_b_time_out != null && $data->absen_c_time_out != null) {
+                $save = new PeopleTapMenu();
+                $save->nik = $request->nik;
+                $save->absen_b_time_in = $datenow;
+                $save->status_tap_in = 2;
+                $save = $save->save();
+            } elseif ($data->absen_a_time_out != null && $data->absen_b_time_out != null && $data->absen_c_time_out == null) {
+                $save = new PeopleTapMenu();
+                $save->nik = $request->nik;
+                $save->absen_b_time_in = $datenow;
+                $save->status_tap_in = 2;
+                $save = $save->save();
+            } elseif ($data->absen_a_time_out == null && $data->absen_b_time_out != null && $data->absen_c_time_out != null) {
+                $save = new PeopleTapMenu();
+                $save->nik = $request->nik;
+                $save->absen_b_time_in = $datenow;
+                $save->status_tap_in = 2;
+                $save = $save->save();
             } else {
                 $response = [
                     'status' => false,
@@ -432,13 +491,21 @@ class PeopleController extends Controller
 
     public function taping_c(Request $request)
     {
-        
-        // return $request->all();
         $datenow = Carbon::now()->format('Y-m-d H:i:s');
         $dateparam = Carbon::now()->format('Y-m-d');
 
+        $karyawan  = Karyawan::where('nik', $request->nik)->first();
 
-        $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->first();
+        if (empty($karyawan)) {
+            $response = [
+                'status' => false,
+                'message' => 'Failed to taping'
+            ];
+            $http_code = 404;
+            return response()->json($response, $http_code);
+        }
+        
+        $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->orderBy('created_at', 'DESC')->first();
 
         if (!empty($data)) {
 
@@ -480,7 +547,6 @@ class PeopleController extends Controller
         } else {
 
             if ($data->absen_c_time_in == NULL || $data->absen_c_time_in == null) {
-                // $data->nik = $request->nik;
                 $data->absen_c_time_in = $datenow;
                 $data->status_tap_in = 3;
                 $save = $data->save();
@@ -496,7 +562,7 @@ class PeopleController extends Controller
                 $save_detail->id_people_tap_menu= $data->id;
                 $save_detail = $save_detail->save();
 
-            } elseif ($data->absen_c_time_out != NULL || $data->absen_c_time_out != null) {
+            } elseif ($data->absen_c_time_out != NULL && $data->absen_a_time_out == null && $data->absen_b_time_out == null) {
                 $data->absen_c_time_out = null;
                 $data->status_tap_in = 3;
                 $save = $data->save();
@@ -519,6 +585,24 @@ class PeopleController extends Controller
                 } else {
 
                 }
+            } elseif ($data->absen_a_time_out != null && $data->absen_b_time_out != null && $data->absen_c_time_out != null) {
+                $save = new PeopleTapMenu();
+                $save->nik = $request->nik;
+                $save->absen_c_time_in = $datenow;
+                $save->status_tap_in = 3;
+                $save = $save->save();
+            } elseif ($data->absen_a_time_out == null && $data->absen_b_time_out != null && $data->absen_c_time_out != null) {
+                $save = new PeopleTapMenu();
+                $save->nik = $request->nik;
+                $save->absen_c_time_in = $datenow;
+                $save->status_tap_in = 3;
+                $save = $save->save();
+            } elseif ($data->absen_a_time_out != null && $data->absen_b_time_out == null && $data->absen_c_time_out != null) {
+                $save = new PeopleTapMenu();
+                $save->nik = $request->nik;
+                $save->absen_c_time_in = $datenow;
+                $save->status_tap_in = 3;
+                $save = $save->save();
             } else {
                 $response = [
                     'status' => false,
@@ -583,6 +667,7 @@ class PeopleController extends Controller
                     ->offset($limit_page)
                     ->limit($perpage)
                     ->get();
+        // return $list_detail;
 
         $data_detail = [];
         if (!empty($list_detail)) {
@@ -651,7 +736,7 @@ class PeopleController extends Controller
 
     public function submitform()
     {
-        $get=Karyawan::all();
+        $get=Karyawan::orderBy('id', 'DESC')->get();
         return view('submitform',['get' => $get]);
     }
 

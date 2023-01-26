@@ -9,35 +9,35 @@ list people absen
 <div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-gray-500">List absent</h6>
-        <a href="{{url('/karyawan')}}" class="btn btn-outline-primary py-1" style="margin-left: 2px; float: right;margin-right: 30px">List Karyawan</a>
+        <!-- <a href="{{url('/karyawan')}}" class="btn btn-outline-primary py-1" style="margin-left: 2px; float: right;margin-right: 30px">List Karyawan</a> -->
+        <button class="btn btn-outline-primary btn-rounded mb-2 py-1 sidebarcuk" style="margin-top: 10px">Menu <-></button>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="105%" cellspacing="0">
+            <!-- <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0"> -->
+            <table class="table table-bordered" id="zero-config" width="100%" cellspacing="0">
                 <thead>
-                    <!-- <a class="btn btn-outline-success mb-1">Print</a> -->
-
                     <tr>
                         <th rowspan="2" style="vertical-align: middle;text-align: center;" width="5%">No</th>
                         <th rowspan="2" style="vertical-align: middle;text-align: center;" width="5%">NIK</th>
                         <th rowspan="2" style="vertical-align: middle;text-align: center;" width="25%">Name</th>
-                        <th colspan="3" style="text-align: center;">Room A</th>
-                        <th colspan="3" style="text-align: center;">Room B</th>
-                        <th colspan="3" style="text-align: center;">Room C</th>
-                        <th rowspan="2" style="vertical-align: middle;" width="10%">Information</th>
-                        <th rowspan="2" style="vertical-align: middle;" width="10%">total duration</th>
-                        <th rowspan="2" style="vertical-align: middle;" width="5%">date</th>
+                        <th colspan="3" style="vertical-align: middle;text-align: center;">Room A</th>
+                        <th colspan="3" style="vertical-align: middle;text-align: center;">Room B</th>
+                        <th colspan="3" style="vertical-align: middle;text-align: center;">Room C</th>
+                        <th rowspan="2" style="vertical-align: middle;text-align: center;" width="10%">Information</th>
+                        <th rowspan="2" style="vertical-align: middle;text-align: center;" width="5%">Total Duration</th>
+                        <th rowspan="2" style="vertical-align: middle;text-align: center;" width="5%">Date</th>
                     </tr>
                     <tr>
-                        <th width="5%">in</th>
-                        <th width="5%">out</th>
-                        <th width="10%">duration</th>
-                        <th width="5%">in</th>
-                        <th width="5%">out</th>
-                        <th width="10%">duration</th>
-                        <th width="5%">in</th>
-                        <th width="5%">out</th>
-                        <th width="10%">duration</th>
+                        <th style="vertical-align: middle;text-align: center;" width="5%">in</th>
+                        <th style="vertical-align: middle;text-align: center;" width="5%">out</th>
+                        <th style="vertical-align: middle;text-align: center;" width="5%">duration</th>
+                        <th style="vertical-align: middle;text-align: center;" width="5%">in</th>
+                        <th style="vertical-align: middle;text-align: center;" width="5%">out</th>
+                        <th style="vertical-align: middle;text-align: center;" width="5%">duration</th>
+                        <th style="vertical-align: middle;text-align: center;" width="5%">in</th>
+                        <th style="vertical-align: middle;text-align: center;" width="5%">out</th>
+                        <th style="vertical-align: middle;text-align: center;" width="5%">duration</th>
                     </tr>
                 </thead>
 
@@ -45,59 +45,59 @@ list people absen
                     @if(!empty($response['data']))
                         @foreach($response['data'] as $absent => $value)
                         <tr style="vertical-align: middle;text-align: center;font-size: 13px;">
-                            <td width="5%">{{ $absent +1 }}</td>
-                            <td width="5%">{{ $value['nik'] }}</td>
-                            <td width="25%" style="text-transform: uppercase;">{{ $value['nama'] }}</td>
+                            <td style="vertical-align: middle;text-align: center;" width="5%">{{ $absent +1 }}</td>
+                            <td style="vertical-align: middle;text-align: center;" width="5%">{{ $value['nik'] }}</td>
+                            <td style="vertical-align: middle;text-align: center;" width="25%" style="text-transform: uppercase;">{{ $value['nama'] }}</td>
 
-                            <td width="5%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['absen_a_time_in']!=null)
                                 {{ date("H:i:s",strtotime($value['absen_a_time_in'])) }}
                                 @endif()
                             </td>
-                            <td width="5%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['absen_a_time_out']!=null)
                                 {{ date("H:i:s",strtotime($value['absen_a_time_out'])) }}
                                 @endif()
                             </td>
-                            <td width="10%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['absen_a_time_out']!=null)
                                 {{ $value['a_duration'] }}
                                 @endif()
                             </td>
 
-                            <td width="5%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['absen_b_time_in']!=null)
                                 {{ date("H:i:s",strtotime($value['absen_b_time_in'])) }}
                                 @endif()
                             </td>
-                            <td width="5%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['absen_b_time_out']!=null)
                                 {{ date("H:i:s",strtotime($value['absen_b_time_out'])) }}
                                 @endif()
                             </td>
-                            <td width="10%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['absen_b_time_out']!=null)
                                 {{ date("H:i:s",strtotime($value['b_duration'])) }}
                                 @endif()
                             </td>
 
-                            <td width="5%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['absen_c_time_in']!=null)
                                 {{ date("H:i:s",strtotime($value['absen_c_time_in'])) }}
                                 @endif()
                             </td>
-                            <td width="5%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['absen_c_time_out']!=null)
                                 {{ date("H:i:s",strtotime($value['absen_c_time_out'])) }}
                                 @endif()
                             </td>
-                            <td width="10%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['absen_c_time_out']!=null)
                                 {{ date("H:i:s",strtotime($value['c_duration'])) }}
                                 @endif()
                             </td>
 
-                            <td width="10%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 @if($value['status_tap_in']==1)
                                 @if($value['absen_a_time_out']==null)
                                 In Room A
@@ -118,12 +118,12 @@ list people absen
                                 @endif()
                                 @endif()
                             </td>
-                            <td width="5%">
+                            <td style="vertical-align: middle;text-align: center;" width="10%">
                                 <!-- total duration -->
                                 {{ $value['total_duration'] }}
 
                             </td>
-                            <td width="5%">
+                            <td style="vertical-align: middle;text-align: center;" width="5%">
                                 {{ date("d/m/Y",strtotime($value['created_at'])) }}
                             </td>
                         </tr>
@@ -138,3 +138,29 @@ list people absen
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function(){
+      $(".sidebarcuk").click(function(){
+        $("#accordionSidebar").toggle();
+    });
+  });
+</script>
+
+<!-- datatable -->
+<script>
+    $('#zero-config').DataTable({
+        "oLanguage": {
+            "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+            "sInfo": "Showing page _PAGE_ of _PAGES_",
+            "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+            "sSearchPlaceholder": "Search...",
+            "sLengthMenu": "Results :  _MENU_",
+        },
+        "stripeClasses": [],
+        "lengthMenu": [7, 10, 20, 50],
+        "pageLength": 7 
+    });
+</script>
+@endpush    
