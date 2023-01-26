@@ -15,8 +15,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use RealRashid\SweetAlert\Facades\Alert;
 
-
-
 class KaryawanController extends Controller
 {
     /**
@@ -26,10 +24,11 @@ class KaryawanController extends Controller
      */
     public function index()
     {
-        $karyawan = Karyawan::select('karyawan.*')->offset(0)->limit(20)->get();
+
+        $karyawan = Karyawan::select('*')->orderBy('id', 'DESC')->get();
 
         return view('karyawan.list', ['karyawan' => $karyawan]);
-}
+    }   
 
     /**
      * Show the form for creating a new resource.
@@ -53,32 +52,36 @@ class KaryawanController extends Controller
         $validator = Validator::make($request->all(), [
             'nik' => 'required|unique:karyawan|max:5',
             'nama' => 'required',
+            'email' => 'unique:karyawan|max:255',   
         ]);
         
         if ($validator->fails()) {
             $out = [
             "message" => $validator->messages()->all(),
             ];
-            return response()->json($out, 422);
-        }
+            // return response()->json($out, 422);
+            foreach ($out as $key => $value) {
+                Alert::error('Failed!', $value);
+                return back();
+            }
 
+        }
 
         $karyawan = Karyawan::all();
         $count = count($karyawan);
 
-        if ($count == 200) {
+        if ($count == 201) {
             $response = [
                 'status' => false,
                 'message' => 'Failed to insert, limit max 200 data'
             ];
             $http_code = 422;
 
-            Alert::error('Failed', 'jumlah karyawan sudah penuh!');
+            Alert::error('Failed', 'jumlah karyawan sudah penuh! (limit:201)');
             return back();
         } else {
            $save = Karyawan::create($request->all());
         }
-
 
         if ($save) {
             $response = [

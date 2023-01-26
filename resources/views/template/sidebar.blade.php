@@ -8,7 +8,6 @@
                 </div>
             </a>
 
-
             <hr class="sidebar-divider my-0">
 
             <li class="nav-item">
@@ -18,7 +17,7 @@
                 </a>
             </li>
 
-             <hr class="sidebar-divider my-0">
+            <hr class="sidebar-divider my-0">
 
             <li class="nav-item">
                 <a class="nav-link" href="{{url('/people/detail_absent')}}">
@@ -27,28 +26,15 @@
                 </a>
             </li>
 
-            <!-- Divider -->
-
-            {{--@if(Auth::User()->role_id == 3)--}} 
-            <!-- Divider -->
             <hr class="sidebar-divider my-0">
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-                    aria-expanded="true" aria-controls="collapseTwo">
-                    <i class="fas fa-fw fa-box"></i>
-                    <span>Absent Menu</span>
+                <a class="nav-link" href="{{url('/karyawan')}}">
+                    <i class="fas fa-user"></i>
+                    <span> Karyawan</span>
                 </a>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{url('/dashboard')}}">Absent_In</a>
-                        <a class="collapse-item" href="{{url('/dashboard')}}">Absent_Out</a>
-                    </div>
-                </div>
             </li>
-            {{--@endif--}}
-
-            <!-- Divider -->
+            
             <hr class="sidebar-divider d-none d-md-block">
 
             <!-- Sidebar Toggler (Sidebar) -->
