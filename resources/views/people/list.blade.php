@@ -8,7 +8,7 @@ list people absen
 <!-- DataTales Example -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-gray-500">List absent</h6>
+        <h6 class="m-0 font-weight-bold text-gray-500">Absent List</h6>
         <!-- <a href="{{url('/karyawan')}}" class="btn btn-outline-primary py-1" style="margin-left: 2px; float: right;margin-right: 30px">List Karyawan</a> -->
         <button class="btn btn-outline-primary btn-rounded mb-2 py-1 sidebarcuk" style="margin-top: 10px">Menu <-></button>
     </div>

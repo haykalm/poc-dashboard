@@ -29,6 +29,7 @@ Route::get('/tap', [PeopleController::class, 'submitform']);
 Route::post('/people', [PeopleController::class, 'store'])->name('submit-form-a');
 Route::get('people/detail_absent',['as' => 'people.detail_absent','uses' => 'App\Http\Controllers\PeopleController@detail_absent']);
 Route::get('/people', [PeopleController::class, 'index']);
+Route::get('/history', [PeopleController::class, 'history_in_out']);
 
 Route::resource('/dashboard', DashboardController::class);
 

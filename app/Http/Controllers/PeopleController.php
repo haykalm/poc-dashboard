@@ -8,6 +8,7 @@ use App\Models\{
     Karyawan,
     DetailTap,
     PeopleTapMenu,
+    HistoryInOut,
 };
 use Carbon\Carbon;
 use Session;
@@ -154,9 +155,11 @@ class PeopleController extends Controller
 
     }
 
+
     public function create()
     {
     }
+
 
     public function store(Request $request)
     {
@@ -176,7 +179,6 @@ class PeopleController extends Controller
             $http_code = 404;
             return response()->json($response, $http_code);
         }
-
        
         $data = PeopleTapMenu::where('nik', $request->nik)->whereDate('created_at', $dateparam)->orderBy('created_at', 'DESC')->first();
         if (!empty($data)) {
@@ -187,6 +189,17 @@ class PeopleController extends Controller
                 $data->absen_b_time_out = $datenow;
                 $data->status_tap_out = 2;
                 $save = $data->save();
+
+                // update history absent/in_out
+                $get_history=HistoryInOut::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                $b_duration = Carbon::parse($data->absen_b_time_in)->diffInSeconds(Carbon::parse($data->absen_b_time_out));
+                $b_duration =  gmdate('Y-m-d H:i:s',$b_duration); 
+
+                $get_history->time_out= $data->absen_b_time_out;
+                $get_history->duration= $b_duration;
+                $get_history->type_room= 'B';
+                $get_history->save();
 
                 $save_detail = new DetailTap;
                 $save_detail->time_out= $data->absen_b_time_out;
@@ -200,6 +213,17 @@ class PeopleController extends Controller
                 $data->status_tap_out = 3;
                 $save = $data->save();
 
+                // update history absent/in_out
+                $get_history=HistoryInOut::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                $c_duration = Carbon::parse($data->absen_c_time_in)->diffInSeconds(Carbon::parse($data->absen_c_time_out));
+                $c_duration =  gmdate('Y-m-d H:i:s',$c_duration); 
+
+                $get_history->time_out= $data->absen_c_time_out;
+                $get_history->duration= $c_duration;
+                $get_history->type_room= 'C';
+                $get_history->save();
+
                 $save_detail = new DetailTap;
                 $save_detail->time_out= $data->absen_c_time_out;
                 $save_detail->time_in= $data->absen_c_time_in;
@@ -210,11 +234,18 @@ class PeopleController extends Controller
         }
 
         if (empty($data)) {
-            $save = new PeopleTapMenu();
-            $save->nik = $request->nik;
-            $save->absen_a_time_in = $datenow;
-            $save->status_tap_in = 1;
-            $save = $save->save();
+            $data = new PeopleTapMenu();
+            $data->nik = $request->nik;
+            $data->absen_a_time_in = $datenow;
+            $data->status_tap_in = 1;
+            $save = $data->save();
+
+            // insert history
+            $save_history = new HistoryInOut;
+            $save_history->id_people_tap_menu= $data->id;
+            $save_history->time_in= $data->absen_a_time_in;
+            $save_history->type_room= 'A';
+            $save_history->save();
 
         } else {
 
@@ -225,12 +256,31 @@ class PeopleController extends Controller
                 $data->status_tap_in = 1;
                 $save = $data->save();
 
-            } elseif ($data->absen_a_time_out == NULL || $data->absen_a_time_out == null) {
+                // insert history
+                $save_history = new HistoryInOut;
+                $save_history->id_people_tap_menu= $data->id;
+                $save_history->time_in= $data->absen_a_time_in;
+                $save_history->type_room= 'A';
+                $save_history->save();
 
+            } elseif ($data->absen_a_time_out == NULL || $data->absen_a_time_out == null) {
+                // insert people_tap_menu
                 $data->absen_a_time_out = $datenow;
                 $data->status_tap_out = 1;
                 $save = $data->save();
 
+                // update history absent/in_out
+                $get_history=HistoryInOut::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                $a_duration = Carbon::parse($data->absen_a_time_in)->diffInSeconds(Carbon::parse($data->absen_a_time_out));
+                $a_duration =  gmdate('Y-m-d H:i:s',$a_duration); 
+
+                $get_history->time_out= $data->absen_a_time_out;
+                $get_history->duration= $a_duration;
+                $get_history->type_room= 'A';
+                $get_history->save();
+
+                // insert detail_absent
                 $getdetail=DetailTap::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
                 if (empty($getdetail)) {
                     $save_detail = new DetailTap;
@@ -259,7 +309,7 @@ class PeopleController extends Controller
                     }
                 }
 
-            } elseif ($data->absen_a_time_out != null && $data->absen_b_time_out == null && $data->absen_c_time_out == null) {
+            } elseif ($data->absen_a_time_out != null || $data->absen_a_time_out != NULL) {
                 $data->absen_a_time_out = null;
                 $data->status_tap_in = 1;
                 $save = $data->save();
@@ -339,6 +389,7 @@ class PeopleController extends Controller
         // return response($response, $http_code);
     }
 
+
     public function taping_b(Request $request)
     {
         $datenow = Carbon::now()->format('Y-m-d H:i:s');
@@ -366,6 +417,17 @@ class PeopleController extends Controller
                 $data->status_tap_out = 1;
                 $save = $data->save();
 
+                // update history absent/in_out
+                $get_history=HistoryInOut::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                $a_duration = Carbon::parse($data->absen_a_time_in)->diffInSeconds(Carbon::parse($data->absen_a_time_out));
+                $a_duration =  gmdate('Y-m-d H:i:s',$a_duration); 
+
+                $get_history->time_out= $data->absen_a_time_out;
+                $get_history->duration= $a_duration;
+                $get_history->type_room= 'A';
+                $get_history->save();
+
                 $save_detail = new DetailTap;
                 $save_detail->time_out= $data->absen_a_time_out;
                 $save_detail->time_in= $data->absen_a_time_in;
@@ -378,6 +440,17 @@ class PeopleController extends Controller
                 $data->status_tap_out = 3;
                 $save = $data->save();
 
+                // update history absent/in_out
+                $get_history=HistoryInOut::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                $c_duration = Carbon::parse($data->absen_c_time_in)->diffInSeconds(Carbon::parse($data->absen_c_time_out));
+                $c_duration =  gmdate('Y-m-d H:i:s',$c_duration); 
+
+                $get_history->time_out= $data->absen_c_time_out;
+                $get_history->duration= $c_duration;
+                $get_history->type_room= 'C';
+                $get_history->save();
+
                 $save_detail = new DetailTap;
                 $save_detail->time_out= $data->absen_c_time_out;
                 $save_detail->time_in= $data->absen_c_time_in;
@@ -388,11 +461,18 @@ class PeopleController extends Controller
         }
 
         if (empty($data)) {
-            $save = new PeopleTapMenu();
-            $save->nik = $request->nik;
-            $save->absen_b_time_in = $datenow;
-            $save->status_tap_in = 2;
-            $save = $save->save();
+            $data = new PeopleTapMenu();
+            $data->nik = $request->nik;
+            $data->absen_b_time_in = $datenow;
+            $data->status_tap_in = 2;
+            $save = $data->save();
+
+            // insert history
+            $save_history = new HistoryInOut;
+            $save_history->id_people_tap_menu= $data->id;
+            $save_history->time_in= $data->absen_b_time_in;
+            $save_history->type_room= 'B';
+            $save_history->save();
 
         } else {
 
@@ -401,19 +481,38 @@ class PeopleController extends Controller
                 $data->status_tap_in = 2;
                 $save = $data->save();
 
-            } elseif ($data->absen_b_time_out == NULL || $data->absen_b_time_out == null) {
+                // insert history
+                $save_history = new HistoryInOut;
+                $save_history->id_people_tap_menu= $data->id;
+                $save_history->time_in= $data->absen_b_time_in;
+                $save_history->type_room= 'B';
+                $save_history->save();
 
+            } elseif ($data->absen_b_time_out == NULL || $data->absen_b_time_out == null) {
+                // update people_tap_menu
                 $data->absen_b_time_out = $datenow;
                 $data->status_tap_out = 2;
                 $save = $data->save();
 
+                // update history absent/in_out
+                $get_history=HistoryInOut::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                $b_duration = Carbon::parse($data->absen_b_time_in)->diffInSeconds(Carbon::parse($data->absen_b_time_out));
+                $b_duration =  gmdate('Y-m-d H:i:s',$b_duration); 
+
+                $get_history->time_out= $data->absen_b_time_out;
+                $get_history->duration= $b_duration;
+                $get_history->type_room= 'B';
+                $get_history->save();
+
+                // insert detail absent
                 $save_detail = new DetailTap;
                 $save_detail->time_out= $datenow;
                 $save_detail->type_room= 'B';
                 $save_detail->id_people_tap_menu= $data->id;
                 $save_detail = $save_detail->save();
 
-            } elseif ($data->absen_b_time_out != NULL && $data->absen_a_time_out == null && $data->absen_c_time_out == null) {
+            } elseif ($data->absen_b_time_out != NULL || $data->absen_b_time_out != null) {
                 $data->absen_b_time_out = null;
                 $data->status_tap_out = 3;
                 $save = $data->save();
@@ -489,6 +588,7 @@ class PeopleController extends Controller
         // return response($response, $http_code);
     }
 
+
     public function taping_c(Request $request)
     {
         $datenow = Carbon::now()->format('Y-m-d H:i:s');
@@ -516,6 +616,17 @@ class PeopleController extends Controller
                 $data->status_tap_out = 1;
                 $save = $data->save();
 
+                // update history absent/in_out
+                $get_history=HistoryInOut::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                $a_duration = Carbon::parse($data->absen_a_time_in)->diffInSeconds(Carbon::parse($data->absen_a_time_out));
+                $a_duration =  gmdate('Y-m-d H:i:s',$a_duration); 
+
+                $get_history->time_out= $data->absen_a_time_out;
+                $get_history->duration= $a_duration;
+                $get_history->type_room= 'A';
+                $get_history->save();
+
                 $save_detail = new DetailTap;
                 $save_detail->time_out= $data->absen_a_time_out;
                 $save_detail->time_in= $data->absen_a_time_in;
@@ -528,6 +639,17 @@ class PeopleController extends Controller
                 $data->status_tap_out = 2;
                 $save = $data->save();
 
+                // update history absent/in_out
+                $get_history=HistoryInOut::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                $b_duration = Carbon::parse($data->absen_b_time_in)->diffInSeconds(Carbon::parse($data->absen_b_time_out));
+                $b_duration =  gmdate('Y-m-d H:i:s',$b_duration); 
+
+                $get_history->time_out= $data->absen_b_time_out;
+                $get_history->duration= $b_duration;
+                $get_history->type_room= 'B';
+                $get_history->save();
+
                 $save_detail = new DetailTap;
                 $save_detail->time_out= $data->absen_b_time_out;
                 $save_detail->time_in= $data->absen_b_time_in;
@@ -538,11 +660,18 @@ class PeopleController extends Controller
         }
 
         if (empty($data)) {
-            $save = new PeopleTapMenu();
-            $save->nik = $request->nik;
-            $save->absen_c_time_in = $datenow;
-            $save->status_tap_in = 3;
-            $save = $save->save();
+            $data = new PeopleTapMenu();
+            $data->nik = $request->nik;
+            $data->absen_c_time_in = $datenow;
+            $data->status_tap_in = 3;
+            $save = $data->save();
+
+            // insert history
+            $save_history = new HistoryInOut;
+            $save_history->id_people_tap_menu= $data->id;
+            $save_history->time_in= $data->absen_c_time_in;
+            $save_history->type_room= 'C';
+            $save_history->save();
 
         } else {
 
@@ -551,18 +680,38 @@ class PeopleController extends Controller
                 $data->status_tap_in = 3;
                 $save = $data->save();
 
+                // insert history
+                $save_history = new HistoryInOut;
+                $save_history->id_people_tap_menu= $data->id;
+                $save_history->time_in= $data->absen_c_time_in;
+                $save_history->type_room= 'C';
+                $save_history->save();
+
             } elseif ($data->absen_c_time_out == NULL || $data->absen_c_time_out == null) {
+                // update people_tap_menu
                 $data->absen_c_time_out = $datenow;
                 $data->status_tap_out = 3;
                 $save = $data->save();
 
+                // update history absent/in_out
+                $get_history=HistoryInOut::where('id_people_tap_menu', $data->id)->orderBy('created_at', 'DESC')->first();
+
+                $c_duration = Carbon::parse($data->absen_c_time_in)->diffInSeconds(Carbon::parse($data->absen_c_time_out));
+                $c_duration =  gmdate('Y-m-d H:i:s',$c_duration); 
+
+                $get_history->time_out= $data->absen_c_time_out;
+                $get_history->duration= $c_duration;
+                $get_history->type_room= 'C';
+                $get_history->save();
+
+                // insert detail_absent
                 $save_detail = new DetailTap;
                 $save_detail->time_out= $datenow;
                 $save_detail->type_room= 'B';
                 $save_detail->id_people_tap_menu= $data->id;
                 $save_detail = $save_detail->save();
 
-            } elseif ($data->absen_c_time_out != NULL && $data->absen_a_time_out == null && $data->absen_b_time_out == null) {
+            } elseif ($data->absen_c_time_out != NULL || $data->absen_c_time_out != null) {
                 $data->absen_c_time_out = null;
                 $data->status_tap_in = 3;
                 $save = $data->save();
@@ -638,6 +787,7 @@ class PeopleController extends Controller
         // return response($response, $http_code);
     }
 
+
     public function update(Request $request, $id)
     {
     }
@@ -663,11 +813,11 @@ class PeopleController extends Controller
         }
 
         $list_detail = DetailTap::with('people_tap_menu.karyawan')
-                    ->whereNotNull('time_in')
+                    // ->whereNotNull('time_in')
                     ->offset($limit_page)
                     ->limit($perpage)
+                    ->orderBy('created_at', 'DESC')
                     ->get();
-        // return $list_detail;
 
         $data_detail = [];
         if (!empty($list_detail)) {
@@ -679,15 +829,19 @@ class PeopleController extends Controller
                     $out = Carbon::parse($value->time_out);
                     $rest_duration = $in->diffInSeconds($out);
                     $rest_duration =  gmdate('H:i:s',$rest_duration);
+
+                    $time_in = $value->time_in;
+
                 } else {
                     $rest_duration = '00:00:00';
+                    $time_in = '00:00:00';
                 }
 
                 
                 $data_detail[] = [
                     'nama' => $value->people_tap_menu->karyawan->nama,
                     'nik' => $value->people_tap_menu->nik,
-                    'time_in' => $value->time_in,
+                    'time_in' => $time_in,
                     'time_out' => $value->time_out,
                     'type_room' => $value->type_room,
                     'total_duration_rest' => Carbon::parse($rest_duration)->format('H:i:s'),
@@ -734,16 +888,104 @@ class PeopleController extends Controller
       return view('people.list_detail', ['response' => $response]);
     }
 
+
     public function submitform()
     {
         $get=Karyawan::orderBy('id', 'DESC')->get();
         return view('submitform',['get' => $get]);
     }
 
+
     public function getkaryawan()
     {
         $get=Karyawan::all();
         return view('submitform',['get' => $get]);
         
+    }
+
+
+    public function history_in_out()
+    {
+         $perpage = 10;
+        if (empty($request->page)) {
+            $requestpage = 1;
+        } else {
+            $requestpage = $request->page;
+        }
+
+        if ($requestpage == 1) {
+            $page = 1;
+            $limit_page = 0;
+        } else {
+            $limit_page = ($request->page * $perpage) - $perpage;
+        }
+
+        $data_history = HistoryInOut::select('*', 'people_tap_menu.*', 'karyawan.nama', 'karyawan.nik')
+            ->leftjoin('people_tap_menu', 'people_tap_menu.id', '=', 'history_in_out.id_people_tap_menu')
+            ->leftjoin('karyawan', 'karyawan.nik', '=', 'people_tap_menu.nik')
+            ->offset($limit_page)
+            ->limit($perpage)
+            ->orderBy('history_in_out.updated_at', 'DESC')
+            ->get();
+
+        $dathis = [];
+        if (!empty($data_history)) {
+            foreach ($data_history as $key => $value) {
+                if ($value->time_out !=null || $value->duration !=null) {
+                    $time_out = $value->time_out;
+                    $duration = $value->duration;
+                } else {
+                    $time_out = '00:00:00';
+                    $duration = '00:00:00';
+                }
+                
+                $dathis[] = [
+                    'nik' => $value->nik,
+                    'nama' => $value->nama,
+                    'time_in' => $value->time_in,
+                    'time_out' => $time_out,
+                    'duration' => $duration,
+                    'type_room' => $value->type_room,
+                    'date' => $value->created_at
+                ];
+            }
+        } 
+
+        $count = count(HistoryInOut::get());
+        if ($count / $requestpage <= ($perpage)) {
+
+            $islastpage = true;
+        } else {
+            $islastpage = false;
+        }
+
+        $lastPage = ceil($count / $perpage);
+
+
+        if (count($dathis) != 0) {
+
+            $response = [
+                "status" => true,
+                "message" => "page berhasil ditampilkan",
+                "data" => $dathis,
+                "totaldata" => $count,
+                "page" => $requestpage,
+                "last_page" => $lastPage,
+                "is_last_page" => $islastpage
+            ];
+            $http_code = 200;
+        } else {
+            $response = [
+                "status" => false,
+                "message" => "Tidak Ada data page",
+                "totaldata" => $count,
+                "page" => $requestpage,
+                "last_page" => $lastPage,
+                "is_last_page" => $islastpage
+            ];
+            $http_code = 422;
+        }
+
+        return view('people.list_history', ['response' => $response]);
     }
 }

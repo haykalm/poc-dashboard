@@ -23,6 +23,11 @@ class PeopleTapMenu extends Model
 		'status_tap_out',
 	];
 
+	protected $hidden = [
+		'created_at',
+		'updated_at',
+	];
+
 	public function karyawan()
     {
     	return $this->hasOne(Karyawan::class,'nik','nik');

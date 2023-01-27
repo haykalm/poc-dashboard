@@ -21,8 +21,18 @@
 
             <li class="nav-item">
                 <a class="nav-link" href="{{url('/people/detail_absent')}}">
-                    <i class="fas fa-fw fa-user-friends"></i>
-                    <span>Detail Absent</span>
+                    <!-- <i class="fas fa-fw fa-user-friends"></i> -->
+                    <i class="fas fa-fw fa-clock"></i>
+                    <span>Waktu Istirahat</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider my-0">
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{url('/history')}}">
+                    <i class="fas fa-fw fa-clock"></i>
+                    <span>Waktu Kerja</span>
                 </a>
             </li>
 
