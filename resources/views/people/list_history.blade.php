@@ -1,14 +1,14 @@
 @extends('template.master')
 
 @section('title')
-  Detail Absent 
+  History Absent 
 @endsection
 
 @section('content')
 <!-- DataTales Example -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-gray-500">Rest Time List</h6>
+        <h6 class="m-0 font-weight-bold text-gray-500">Work Time List</h6>
         <button class="btn btn-outline-primary btn-rounded mb-2- py-1 sidebarcuk" style="margin-top: 10px">Menu <-></button>
     </div>
     <div class="card-body">
@@ -20,33 +20,33 @@
                         <th style="vertical-align: middle;text-align: center;" width="5%">No</th>
                         <th style="vertical-align: middle;text-align: center;" width="7%">NIK</th>
                         <th style="vertical-align: middle;text-align: center;" width="20%">Name</th>
-                        <th style="vertical-align: middle;text-align: center;" width="10%">Out</th>
                         <th style="vertical-align: middle;text-align: center;" width="10%">In</th>
+                        <th style="vertical-align: middle;text-align: center;" width="10%">Out</th>
                         <th style="vertical-align: middle;text-align: center;" width="10%">Status</th>
-                        <th style="vertical-align: middle;text-align: center;" width="10%">Rest Duration</th>
+                        <th style="vertical-align: middle;text-align: center;" width="10%">Work Duration</th>
                         <th style="vertical-align: middle;text-align: center;" width="10%">Date</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     @if(!empty($response['data']))
-                        @foreach($response['data'] as $datail => $value)
+                        @foreach($response['data'] as $history => $value)
                         <tr style="font-size: 13px;">
-                            <td style="vertical-align: middle;text-align: center;" width="5%">{{ $datail +1 }}</td>
+                            <td style="vertical-align: middle;text-align: center;" width="5%">{{ $history +1 }}</td>
                             <td style="vertical-align: middle;text-align: center;" width="10%">{{ $value['nik'] }}</td>
                             <td style="vertical-align: middle;text-align: center;text-transform: uppercase;" width="20%">{{ $value['nama'] }}</td>
 
                             <td style="vertical-align: middle;text-align: center;" width="10%">
-                                {{ date("H:i:s",strtotime($value['time_out'])) }}
+                                {{ date("H:i:s",strtotime($value['time_in'])) }}
                             </td>
                             <td style="vertical-align: middle;text-align: center;" width="10%">
-                                {{ date("H:i:s",strtotime($value['time_in'])) }}
+                                {{ date("H:i:s",strtotime($value['time_out'])) }}
                             </td>
                             <td style="vertical-align: middle;text-align: center;" width="10%">
                                 {{ $value['type_room'] }}
                             </td>
                             <td style="vertical-align: middle;text-align: center;" width="10%">
-                                {{ $value['total_duration_rest'] }}
+                                {{ date("H:i:s",strtotime($value['duration'])) }}
                             </td>
                             <td style="vertical-align: middle;text-align: center;" width="10%">
                                 {{ date("d/m/Y",strtotime($value['date'])) }}
