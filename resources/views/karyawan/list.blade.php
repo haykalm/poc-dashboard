@@ -87,7 +87,7 @@ list Karyawan
                     <input type="text" id="email" name="email" class="form-control mb-2" placeholder="email ?">
                     <label style="margin-bottom: 0.5px">Departemen :</label>
                     <input type="text" id="departemen" name="departemen" class="form-control mb-2" placeholder="departemen ?">
-                     <label style="margin-bottom: 0.5px">Tgl Lahir :</label>
+                    <label style="margin-bottom: 0.5px">Tgl Lahir :</label>
                     <input type="date" id="tgl_lahir" name="tgl_lahir" class="form-control mb-2" placeholder="tgl lahir ?">
                     <label style="margin-bottom: 0.5px">No Hp/Wa :</label>
                     <input type="text" id="no_hp" name="no_hp" class="form-control mb-2" placeholder="handphone ?">
@@ -170,6 +170,7 @@ list Karyawan
 <link rel="stylesheet" type="text/css" href="{{ asset('sb-admin-2') }}/plugins/table/datatable/datatables.css">
 <link rel="stylesheet" type="text/css" href="{{ asset('sb-admin-2') }}/plugins/table/datatable/dt-global_style.css">
 <script src="{{ asset('sb-admin-2') }}/plugins/table/datatable/datatables.js"></script>
+
 <script>
     $('#zero-config').DataTable({
         "oLanguage": {
