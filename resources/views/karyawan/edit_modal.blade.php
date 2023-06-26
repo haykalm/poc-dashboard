@@ -17,6 +17,10 @@
         	<input value="{{ $data->tgl_lahir }}" type="date" id="tgl_lahir" name="tgl_lahir" class="form-control mb-2" placeholder="tgl lahir ?">
         	<label style="margin-bottom: 0.5px">No Hp/Wa :</label>
         	<input value="{{ $data->no_hp }}" type="text" id="no_hp" name="no_hp" class="form-control mb-2" placeholder="handphone ?">
+            <div class="form-group">
+                <label for="exampleInputFile">File input</label>
+                <input type="file" id="exampleInputFile">
+            </div>
         </div>
         <div class="footer">
             <button class="btn btn-primary" type="submit">save</button>
